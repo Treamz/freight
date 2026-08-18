@@ -25,21 +25,30 @@ public class FreightPlugin: NSObject, FlutterPlugin {
   /// Assets downloader extension. Managed Background Assets removes the need to
   /// *write* one, but the target must still exist and ship inside the app.
   static var hasDownloaderExtension: Bool {
-    guard let plugins = Bundle.main.builtInPlugInsURL,
-      let entries = try? FileManager.default.contentsOfDirectory(
-        at: plugins,
-        includingPropertiesForKeys: nil
-      )
-    else { return false }
+    // ExtensionKit extensions are embedded in Extensions/, not the PlugIns/
+    // directory `builtInPlugInsURL` points at. Both are searched so a host app
+    // built either way is recognised.
+    let roots = [
+      Bundle.main.bundleURL.appendingPathComponent("Extensions"),
+      Bundle.main.builtInPlugInsURL,
+    ].compactMap { $0 }
 
-    return entries.contains { url in
-      guard url.pathExtension == "appex",
-        let bundle = Bundle(url: url),
-        let attributes = bundle.object(forInfoDictionaryKey: "EXAppExtensionAttributes")
-          as? [String: Any],
-        let point = attributes["EXExtensionPointIdentifier"] as? String
-      else { return false }
-      return point == "com.apple.background-assets.content-request"
+    return roots.contains { root in
+      let entries =
+        (try? FileManager.default.contentsOfDirectory(
+          at: root,
+          includingPropertiesForKeys: nil
+        )) ?? []
+
+      return entries.contains { url in
+        guard url.pathExtension == "appex",
+          let bundle = Bundle(url: url),
+          let attributes = bundle.object(forInfoDictionaryKey: "EXAppExtensionAttributes")
+            as? [String: Any],
+          let point = attributes["EXExtensionPointIdentifier"] as? String
+        else { return false }
+        return point == "com.apple.background-assets.content-request"
+      }
     }
   }
 
