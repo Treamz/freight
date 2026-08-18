@@ -165,6 +165,28 @@ await Freight.pack('maps_europe').ensureDownloaded();
 final bytes = await Freight.read('berlin.tiles');
 ```
 
+## Checking the setup
+
+```bash
+dart run freight doctor
+```
+
+Every check corresponds to something the platform otherwise reports late, on a
+device, and mostly by trapping rather than throwing:
+
+```
+[ok] ba-package: 1.2
+[ok] freight.yaml: 2 packs
+[ok] pack "tutorial": 3 files, 72 bytes
+[ok] BAAppGroupID: group.com.example.app
+[ok] App Groups capability: 2 targets grant "group.com.example.app"
+[ok] Downloader extension: FreightDownloader
+```
+
+It warns when only one target holds the app group, which builds cleanly and then
+does nothing: the extension writes packs into the container the app reads from,
+so both need it.
+
 ## When something goes wrong
 
 These are the messages this setup actually produces, and what each one means.

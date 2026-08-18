@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:args/args.dart';
 import 'package:freight/src/cli/ba_package.dart';
 import 'package:freight/src/cli/builder.dart';
+import 'package:freight/src/cli/doctor.dart';
 import 'package:freight/src/cli/pack_config.dart';
 import 'package:path/path.dart' as p;
 
@@ -10,6 +11,7 @@ Future<void> main(List<String> arguments) async {
   final parser =
       ArgParser()
         ..addCommand('build', _buildParser())
+        ..addCommand('doctor', _doctorParser())
         ..addFlag(
           'help',
           abbr: 'h',
@@ -37,6 +39,8 @@ Future<void> main(List<String> arguments) async {
     switch (command.name) {
       case 'build':
         await _build(command);
+      case 'doctor':
+        await _doctor(command);
       default:
         _printUsage(parser);
         exit(64);
@@ -72,6 +76,44 @@ ArgParser _buildParser() =>
             'under this base. Omit for Apple-hosted packs.',
       );
 
+ArgParser _doctorParser() =>
+    ArgParser()..addOption(
+      'config',
+      defaultsTo: 'freight.yaml',
+      help: 'The pack configuration to check.',
+    );
+
+Future<void> _doctor(ArgResults args) async {
+  final checks = await runDoctor(
+    projectRoot: Directory.current.path,
+    configPath: args.option('config')!,
+  );
+
+  for (final check in checks) {
+    final marker = switch (check.status) {
+      CheckStatus.pass => '[ok]',
+      CheckStatus.warn => '[warn]',
+      CheckStatus.fail => '[fail]',
+    };
+    final sink = check.status == CheckStatus.fail ? stderr : stdout;
+    sink.writeln(
+      '$marker ${check.title}'
+      '${check.detail == null ? '' : ': ${check.detail}'}',
+    );
+    if (check.fix case final fix?) sink.writeln('       $fix');
+  }
+
+  final failures = checks.where((c) => c.status == CheckStatus.fail).length;
+  if (failures > 0) {
+    stderr.writeln();
+    stderr.writeln(
+      '$failures check${failures == 1 ? '' : 's'} failed. Each of these fails '
+      'at runtime on a device, mostly by crashing rather than throwing.',
+    );
+    exit(1);
+  }
+}
+
 Future<void> _build(ArgResults args) async {
   final configPath = args.option('config')!;
   final file = File(configPath);
@@ -100,6 +142,7 @@ void _printUsage(ArgParser parser) {
     ..writeln()
     ..writeln('Commands:')
     ..writeln('  build   Package every asset pack in the configuration.')
+    ..writeln('  doctor  Check the configuration and the iOS project setup.')
     ..writeln()
     ..writeln('Options for "build":')
     ..writeln(parser.commands['build']!.usage)

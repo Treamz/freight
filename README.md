@@ -45,6 +45,17 @@ That resolves each pack's globs, generates the manifests and packages them with
 Apple's `ba-package`. Add `--base-url https://cdn.example.com/packs` to also
 write the download manifest a self-hosting server needs.
 
+Before that, check the setup:
+
+```bash
+dart run freight doctor
+```
+
+Managed Background Assets reports most misconfiguration by crashing on a device
+rather than returning an error, so `doctor` looks for those problems on your
+machine instead — a missing app group, an app group only one target holds, no
+downloader extension, a pack whose globs match nothing.
+
 Then, at runtime:
 
 ```dart

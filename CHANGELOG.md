@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+* Added the `freight doctor` command. Managed Background Assets reports most
+  misconfiguration by crashing on a device rather than returning an error, so
+  `doctor` looks for those problems locally instead: a missing `BAAppGroupID`,
+  an app group only one target holds, no downloader extension embedded, a pack
+  whose globs match nothing, and an unusable `ba-package`.
+
 * Added the `freight build` command. It reads `freight.yaml`, resolves each
   pack's globs, generates the asset-pack manifests and packages them with
   Apple's `ba-package`, and with `--base-url` also writes the download manifest
