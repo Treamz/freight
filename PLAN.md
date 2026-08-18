@@ -241,13 +241,20 @@ DefaultAssetBundle(bundle: Freight.bundle(), child: ...)
 # freight.yaml
 packs:
   tutorial:
-    delivery: essential
-    events: [firstInstallation]
-    files: [assets/tutorial/**]
+    delivery: essential          # essential | prefetch | onDemand
+    events: [firstInstallation]  # automatic policies only
+    root: assets/tutorial        # logical paths are relative to this
+    files: ["**"]                # globs, relative to root
   maps_europe:
     delivery: onDemand
-    files: [assets/maps/europe/**]
+    root: assets/maps/europe
+    files: ["**/*.tiles", "index.txt"]
+    exclude: ["**/draft_*.tiles"]
 ```
+
+`root` is the load-bearing field. A file at `<root>/nested/deep.txt` is read
+back as `nested/deep.txt`, so the root is what decouples the logical paths from
+wherever the sources happen to sit in the repository.
 
 ## Where the work is
 
@@ -268,7 +275,9 @@ README. `ensureDownloaded`, status stream, `read`/`resolve`. Example app against
 a local static server. Goal: prove the API against a real device before
 automating around it.
 
-**0.2 — `freight.yaml` and the CLI.** Generate `Manifest.json`, drive
+**0.2 — `freight.yaml` and the CLI.** The configuration format, glob resolution
+and manifest generation are done and tested; what remains is invoking
+`ba-package` and generating the extension target. Generate `Manifest.json`, drive
 `ba-package`, emit the self-hosted download manifest, and — the part that
 matters — create the downloader extension target, set `BAAppGroupID`, and add
 the App Groups capability. This is where it stops being a wrapper.
