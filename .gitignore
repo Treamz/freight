@@ -1,0 +1,19 @@
+.DS_Store
+.dart_tool/
+.packages
+build/
+pubspec.lock
+
+.idea/
+*.iml
+*.log
+
+# iOS
+ios/.symlinks/
+ios/Flutter/ephemeral/
+example/ios/Flutter/ephemeral/
+example/ios/Flutter/Flutter.podspec
+example/ios/Pods/
+example/ios/.symlinks/
+example/ios/Podfile.lock
+**/xcuserdata/

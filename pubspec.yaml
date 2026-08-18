@@ -1,0 +1,33 @@
+name: freight
+description: "Ship large assets outside your app bundle: iOS Managed Background Assets and Google Play Asset Delivery behind one Dart API."
+version: 0.1.0-dev
+homepage: https://github.com/Treamz/freight
+repository: https://github.com/Treamz/freight
+issue_tracker: https://github.com/Treamz/freight/issues
+
+topics:
+  - assets
+  - ios
+  - background-assets
+  - asset-delivery
+
+environment:
+  sdk: ^3.7.0
+  flutter: ">=3.29.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  plugin:
+    platforms:
+      # Android arrives in 0.3 — see PLAN.md. Declaring it before it exists
+      # would make `flutter build` succeed while every call throws at runtime.
+      ios:
+        pluginClass: FreightPlugin
