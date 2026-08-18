@@ -100,7 +100,12 @@ app still has to satisfy them:
    `EXExtensionPointIdentifier` to `com.apple.background-assets.content-request`
    and be embedded in the app.
 
-From 0.2 the `freight` CLI does both for you.
+From 0.2 the `freight` CLI does both for you. `example/ios` shows the shape of a
+correctly configured project in the meantime.
+
+Note that Background Assets does not work on the iOS Simulator — it requires a
+real signing identity, and Apple's local mock server (`xcrun ba-serve`) cannot
+redirect a simulator. Test asset packs on a device.
 
 ## Requirements
 

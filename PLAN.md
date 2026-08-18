@@ -125,6 +125,74 @@ This is also the sharpest possible confirmation of where the value is: four line
 of Swift, wrapped in an Xcode target that nobody wants to create by hand. The CLI
 generating that target *is* the product.
 
+### Packaging: logical paths come from the working directory
+
+`ba-package` records the path of each file *relative to the directory it was
+invoked from*. A `{"directory": "packs/tutorial"}` selector produces
+`Contents/packs/tutorial/welcome.txt` inside the archive, and `{"directory": "."}`
+fails outright ("an item with the same name already exists").
+
+So the logical path a caller passes to `Freight.read` is decided at build time by
+where the tool ran. The CLI therefore **stages**: expand the pack's globs against
+its declared root, emit explicit `{"file": ...}` selectors relative to that root,
+and invoke `ba-package` with the root as the working directory. Verified to give
+exactly `welcome.txt`, `steps.json`, `nested/deep.txt`.
+
+### Self-hosted download manifest
+
+`ba-package download-manifest create --download-base-url URL` emits:
+
+```json
+{ "assetPacks": [ { "id": "tutorial", "url": "URL/tutorial", "version": 0,
+                    "downloadSize": 596, "downloadPolicy": {...},
+                    "host": { "thirdParty": {} } } ] }
+```
+
+The pack URL is the base plus the pack id, **with no file extension** — a server
+must serve the `.aar` at `/tutorial`, not `/tutorial.aar`. The device appends a
+platform query parameter when fetching the manifest.
+
+For development Apple ships `xcrun ba-serve`, which serves packs over the local
+network and has a `url-override` subcommand for pointing a device at it. Prefer
+it to a hand-rolled static server.
+
+### The extension target, precisely
+
+Assembled and built successfully in `example/ios`; these are the parts that
+matter, and each one was a failure first:
+
+* Product type is `com.apple.product-type.extensionkit-extension`, not
+  `app-extension`. The `xcodeproj` gem has no symbol for it, so the type is set
+  literally. The binary is a Mach-O **executable**, not a bundle.
+* The built extension lands in `YourApp.app/Extensions/`, **not** `PlugIns/`.
+  Code detecting it must look in both.
+* `Info.plist` needs the full set of bundle keys, not just
+  `EXAppExtensionAttributes`. With `GENERATE_INFOPLIST_FILE = NO` nothing is
+  injected, and an appex without `CFBundleIdentifier` fails the build with
+  "Embedded binary's bundle identifier is not prefixed with the parent app's" —
+  a misleading message for a missing key. `CFBundlePackageType` is `XPC!`.
+* The embed phase must run **before** Flutter's "Thin Binary" script and the
+  CocoaPods embed step. Appended last, Xcode reports a dependency cycle rather
+  than a missing file.
+* The extension must be signed. `CODE_SIGNING_ALLOWED = NO` produces an appex
+  that `extensionkitd` never registers.
+
+### Simulator does not run Background Assets
+
+The end-to-end download is **not yet proven**. With a correctly built and
+embedded extension, `AssetPackManager` still traps with "The app lacks a
+Background Assets downloader extension" on the iOS 26.5 simulator, and no
+`FreightDownloader` registration appears in the system log.
+
+This matches Apple's own guidance: Background Assets checks for a real signing
+identity, and the `ba-serve` URL override is known not to work in the simulator.
+Physical-device testing is the documented path.
+
+Consequence for the plan: **0.2 cannot be finished on the simulator.** The next
+step is a device run with `ba-serve` and `ba-serve url-override`, and the CLI
+should not be written until the logical paths and policies are confirmed against
+one.
+
 ### Deployment target
 
 `AssetPackManager` is iOS 26.0+, but the good methods
