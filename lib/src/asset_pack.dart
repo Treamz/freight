@@ -14,8 +14,7 @@ final class AssetPack {
   final String id;
 
   /// Whether every file in this pack is on the device right now.
-  Future<bool> get isDownloaded =>
-      FreightPlatform.instance.isDownloaded(id);
+  Future<bool> get isDownloaded => FreightPlatform.instance.isDownloaded(id);
 
   /// The pack's current state.
   ///
@@ -45,9 +44,9 @@ final class AssetPack {
   ///
   /// Throws [PackNotFoundException] for an unknown id, or
   /// [DownloadFailedException] when the transfer fails.
-  Future<void> ensureDownloaded({bool requireLatest = false}) =>
-      FreightPlatform.instance
-          .ensureDownloaded(id, requireLatest: requireLatest);
+  Future<void> ensureDownloaded({bool requireLatest = false}) => FreightPlatform
+      .instance
+      .ensureDownloaded(id, requireLatest: requireLatest);
 
   /// Deletes the local copy, freeing its disk space.
   ///
