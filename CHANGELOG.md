@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+* Added the `freight build` command. It reads `freight.yaml`, resolves each
+  pack's globs, generates the asset-pack manifests and packages them with
+  Apple's `ba-package`, and with `--base-url` also writes the download manifest
+  a self-hosting server must serve. Each pack declares a `root`, which is what
+  decides the logical paths the app reads back: a file at
+  `<root>/nested/deep.txt` is read as `nested/deep.txt` regardless of where the
+  sources sit in the repository.
+
 * Added `FreightBundle`, an `AssetBundle` backed by downloaded asset packs, and
   `Freight.bundle()` to build one. A pack addresses files by the logical path
   they had when it was built, which is what an asset key already is, so widgets

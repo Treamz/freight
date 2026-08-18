@@ -90,43 +90,56 @@ The device appends a platform query parameter when it fetches this.
 
 ## 4. Build the packs
 
-Write a manifest per pack. Paths are resolved against the working directory
-`ba-package` runs in, so run it from the pack's root and list files relative to
-that root — that is what decides the logical paths you later read back:
+Declare them in `freight.yaml` beside your `pubspec.yaml`:
 
-```json
-{
-  "assetPackID": "maps_europe",
-  "downloadPolicy": { "onDemand": {} },
-  "fileSelectors": [
-    { "file": "berlin.tiles" },
-    { "file": "nested/index.txt" }
-  ],
-  "platforms": ["iOS"]
-}
+```yaml
+packs:
+  tutorial:
+    delivery: prefetch           # essential | prefetch | onDemand
+    events: [firstInstallation]  # automatic policies only
+    root: assets/tutorial        # logical paths are relative to this
+    files: ["**"]                # globs, relative to root
+  maps_europe:
+    delivery: onDemand
+    root: assets/maps/europe
+    files: ["**/*.tiles", "index.txt"]
+    exclude: ["**/draft_*.tiles"]
 ```
+
+`root` is the field that matters most. A file at `<root>/nested/deep.txt` is
+read back as `nested/deep.txt`, so the root is what keeps your repository
+layout out of the paths your app uses.
+
+Delivery policies:
+
+| `delivery`  | Behaviour                                                       |
+|-------------|-----------------------------------------------------------------|
+| `essential` | Downloaded during install; the app cannot open until it finishes |
+| `prefetch`  | Starts during install, may finish afterwards                     |
+| `onDemand`  | Never automatic — the app asks                                   |
+
+`essential` and `prefetch` also take `events`, any of `firstInstallation` and
+`subsequentUpdate`. An `onDemand` pack has no installation event, so declaring
+`events` on one is an error rather than something quietly ignored.
+
+Then:
 
 ```bash
-cd assets/maps_europe
-xcrun ba-package package manifest.json -o ../../build/packs/maps_europe.aar
+dart run freight build
 ```
 
-`xcrun ba-package template` prints a commented starting point.
+Archives land in `build/packs`, with the generated manifests beside them in
+`build/packs/manifests` — worth reading when a pack does not contain what you
+expected.
 
-Download policies are `essential` (downloads during install, blocks the app from
-opening until done), `prefetch` (starts during install, may finish after) and
-`onDemand`. The first two also take `installationEventTypes`:
-`firstInstallation`, `subsequentUpdate`.
-
-If you self-host, generate the manifest your server must serve:
+If you self-host, pass the base URL to also write the server's download
+manifest:
 
 ```bash
-xcrun ba-package download-manifest create build/packs/*.aar \
-  --ios --download-base-url https://cdn.example.com/packs \
-  -o build/packs/download-manifest.json
+dart run freight build --base-url https://cdn.example.com/packs
 ```
 
-Each pack's URL is the base plus the pack id **with no file extension**, so
+Each pack's URL is that base plus the pack id **with no file extension**, so
 serve the archive at `/packs/maps_europe`, not `/packs/maps_europe.aar`.
 
 ## 5. Test on a device
