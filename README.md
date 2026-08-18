@@ -72,40 +72,23 @@ Image(image: FreightImage('maps/pin.png'))
 
 ## iOS setup
 
-Managed Background Assets has two preconditions, and the system *crashes* rather
-than returning an error when either is missing. `freight` checks both first and
-throws `MissingAppGroupException` or `MissingExtensionException` instead, but the
-app still has to satisfy them:
+Managed Background Assets needs an app group and an embedded downloader
+extension, and the system *crashes* rather than returning an error when either
+is missing. `freight` checks both first and throws `MissingAppGroupException` or
+`MissingExtensionException` instead, but the app still has to provide them:
 
-1. **App group.** Add the App Groups capability and set `BAAppGroupID` in
-   `Info.plist` to the group id:
+1. **File → New → Target → Background Download Extension** in Xcode, choosing
+   one of the **Managed** options. The template writes the whole extension — four
+   lines of Swift.
+2. **Add the App Groups capability to the app target** with the same group, and
+   set `BAAppGroupID` in the app's `Info.plist`.
 
-   ```xml
-   <key>BAAppGroupID</key>
-   <string>group.com.example.app</string>
-   ```
+**[doc/ios-setup.md](doc/ios-setup.md) walks through all of it**, including
+building packs with `ba-package`, self-hosting, and what each failure message
+actually means.
 
-2. **A downloader extension target.** Its entire source is four lines — every
-   protocol requirement has a default implementation:
-
-   ```swift
-   import BackgroundAssets
-   import ExtensionFoundation
-
-   @main
-   struct FreightDownloaderExtension: ManagedDownloaderExtension {}
-   ```
-
-   The target must set
-   `EXExtensionPointIdentifier` to `com.apple.background-assets.content-request`
-   and be embedded in the app.
-
-From 0.2 the `freight` CLI does both for you. `example/ios` shows the shape of a
-correctly configured project in the meantime.
-
-Note that Background Assets does not work on the iOS Simulator — it requires a
-real signing identity, and Apple's local mock server (`xcrun ba-serve`) cannot
-redirect a simulator. Test asset packs on a device.
+Note that Background Assets does not work on the iOS Simulator — it needs a real
+signing identity. Test asset packs on a device.
 
 ## Requirements
 
