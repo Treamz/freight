@@ -56,10 +56,22 @@ final bytes = await Freight.read('maps/berlin.mbtiles');
 final file  = await Freight.resolve('maps/berlin.mbtiles');
 ```
 
-Which means downloaded assets can behave like ordinary Flutter assets:
+A pack's logical path is exactly what an asset key is, so downloaded assets can
+behave like ordinary Flutter assets:
 
 ```dart
 Image(image: FreightImage('maps/pin.png'))
+```
+
+Install `FreightBundle` and widgets that take an asset key work against packs
+without knowing it. Keys no pack contains fall through to the app's own assets,
+so one bundle serves both:
+
+```dart
+DefaultAssetBundle(
+  bundle: Freight.bundle(),
+  child: const MapScreen(),
+)
 ```
 
 ## Delivery policies
