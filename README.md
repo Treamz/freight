@@ -35,6 +35,16 @@ packs:
     files: [assets/maps/europe/**]
 ```
 
+Build them:
+
+```bash
+dart run freight build
+```
+
+That resolves each pack's globs, generates the manifests and packages them with
+Apple's `ba-package`. Add `--base-url https://cdn.example.com/packs` to also
+write the download manifest a self-hosting server needs.
+
 Then, at runtime:
 
 ```dart

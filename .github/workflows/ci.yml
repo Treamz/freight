@@ -91,3 +91,79 @@ jobs:
         run: |
           flutter pub get
           flutter build ios --simulator --no-codesign
+
+  packs:
+    name: Package assets
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Select Xcode 26 or newer
+        run: |
+          latest=""
+          for app in /Applications/Xcode*.app; do
+            [ -d "$app" ] || continue
+            version=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' \
+              "$app/Contents/Info.plist" 2>/dev/null) || continue
+            major=${version%%.*}
+            if [ "$major" -ge 26 ] 2>/dev/null; then
+              latest="$app"
+            fi
+          done
+          if [ -z "$latest" ]; then
+            echo "No Xcode 26 or newer on this runner; ba-package ships with Xcode 26."
+            exit 1
+          fi
+          sudo xcode-select -s "$latest/Contents/Developer"
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Build the example packs with the real tool
+        run: |
+          flutter pub get
+          dart run bin/freight.dart build \
+            --config example/freight.yaml \
+            --output build/packs \
+            --base-url https://packs.example.invalid/packs
+
+      - name: Check the archives contain the planned logical paths
+        run: |
+          # The whole design rests on ba-package recording paths relative to the
+          # pack root, so this asserts the archives contain exactly what the
+          # manifests declared - and, in particular, that the source layout has
+          # not leaked in as a path prefix.
+          python3 - <<'CHECK'
+          import json, pathlib, subprocess, sys
+
+          failures = []
+          manifests = sorted(pathlib.Path("build/packs/manifests").glob("*.json"))
+          if not manifests:
+              sys.exit("no manifests were generated")
+
+          for manifest in manifests:
+              spec = json.loads(manifest.read_text())
+              pack = spec["assetPackID"]
+              archive = f"build/packs/{pack}.aar"
+              listing = subprocess.run(
+                  ["aa", "list", "-i", archive],
+                  capture_output=True, text=True, check=True,
+              ).stdout.split()
+
+              declared = [s["file"] for s in spec["fileSelectors"]]
+              for path in declared:
+                  if f"Contents/{path}" not in listing:
+                      failures.append(f"{pack}: declared {path!r}, not in the archive")
+
+              for entry in listing:
+                  if entry.startswith("Contents/") and "." in entry.rsplit("/", 1)[-1]:
+                      logical = entry[len("Contents/"):]
+                      if logical not in declared:
+                          failures.append(f"{pack}: archive has {logical!r}, not declared")
+
+              print(f"{pack}: {len(declared)} paths verified")
+
+          if failures:
+              sys.exit("\n".join(failures))
+          CHECK

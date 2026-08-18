@@ -1,0 +1,16 @@
+# Asset packs for the freight example.
+#
+# A pack's `root` is what decides the logical paths the app reads back: a file
+# at <root>/nested/deep.txt is read as "nested/deep.txt", whatever the sources
+# are called in the repository.
+packs:
+  tutorial:
+    delivery: prefetch
+    events: [firstInstallation, subsequentUpdate]
+    root: packs_src/tutorial
+    files: ["**"]
+
+  maps_europe:
+    delivery: onDemand
+    root: packs_src/maps_europe
+    files: ["**"]
