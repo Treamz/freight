@@ -14,7 +14,7 @@ sealed class FreightException implements Exception {
 /// fetched; it does not necessarily mean the pack was never declared.
 final class PackNotFoundException extends FreightException {
   const PackNotFoundException(this.packId)
-      : super('No asset pack with id "$packId"');
+    : super('No asset pack with id "$packId"');
 
   final String packId;
 }
@@ -22,9 +22,11 @@ final class PackNotFoundException extends FreightException {
 /// A logical path could not be resolved in any downloaded pack.
 final class PathNotFoundException extends FreightException {
   const PathNotFoundException(this.path, {this.packId})
-      : super(packId == null
+    : super(
+        packId == null
             ? 'No file at "$path" in any downloaded asset pack'
-            : 'No file at "$path" in asset pack "$packId"');
+            : 'No file at "$path" in asset pack "$packId"',
+      );
 
   final String path;
 
@@ -35,7 +37,7 @@ final class PathNotFoundException extends FreightException {
 /// The download failed — no network, server error, or out of disk space.
 final class DownloadFailedException extends FreightException {
   const DownloadFailedException(this.packId, String reason)
-      : super('Download of "$packId" failed: $reason');
+    : super('Download of "$packId" failed: $reason');
 
   final String packId;
 }

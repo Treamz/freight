@@ -94,10 +94,11 @@ final class FreightPlatform {
 
   /// Status for every pack. Broadcast, shared across listeners.
   Stream<PackStatus> watchAll() {
-    return _allPacksStream ??= _Wire.events
-        .receiveBroadcastStream(const <String, Object?>{})
-        .map((event) => _statusFromMap(event as Map<Object?, Object?>))
-        .asBroadcastStream();
+    return _allPacksStream ??=
+        _Wire.events
+            .receiveBroadcastStream(const <String, Object?>{})
+            .map((event) => _statusFromMap(event as Map<Object?, Object?>))
+            .asBroadcastStream();
   }
 
   /// Status for one pack.
@@ -105,10 +106,11 @@ final class FreightPlatform {
   /// Filtered natively rather than in Dart so an app watching a single pack
   /// does not pay for updates about every other one.
   Stream<PackStatus> watch(String packId) {
-    return _packStreams[packId] ??= _Wire.events
-        .receiveBroadcastStream({'packId': packId})
-        .map((event) => _statusFromMap(event as Map<Object?, Object?>))
-        .asBroadcastStream();
+    return _packStreams[packId] ??=
+        _Wire.events
+            .receiveBroadcastStream({'packId': packId})
+            .map((event) => _statusFromMap(event as Map<Object?, Object?>))
+            .asBroadcastStream();
   }
 
   Future<T?> _invoke<T>(String method, Map<String, Object?>? arguments) async {
@@ -149,10 +151,7 @@ final class FreightPlatform {
       'unsupported_os' => UnsupportedPlatformException(
         e.message ?? 'Managed Background Assets requires iOS 26.0 or newer',
       ),
-      _ => DownloadFailedException(
-        packId ?? '<unknown>',
-        e.message ?? e.code,
-      ),
+      _ => DownloadFailedException(packId ?? '<unknown>', e.message ?? e.code),
     };
   }
 
@@ -182,14 +181,15 @@ final class FreightPlatform {
           (map['error'] as String?) ?? 'unknown reason',
         ),
       ),
-      _ => flags.downloaded
-          ? PackReady(
+      _ =>
+        flags.downloaded
+            ? PackReady(
               packId: packId,
               flags: flags,
               version: (map['version'] as int?) ?? 0,
               sizeBytes: (map['sizeBytes'] as int?) ?? 0,
             )
-          : PackNotDownloaded(packId: packId, flags: flags),
+            : PackNotDownloaded(packId: packId, flags: flags),
     };
   }
 }

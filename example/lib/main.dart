@@ -130,7 +130,9 @@ class _PackTile extends StatelessWidget {
         '${_formatBytes(completedBytes)} of ${_formatBytes(totalBytes)}',
       PackPaused() => 'Paused · $size',
       PackReady(:final version, :final hasUpdate) =>
-        hasUpdate ? 'v$version · update available' : 'Ready · v$version · $size',
+        hasUpdate
+            ? 'v$version · update available'
+            : 'Ready · v$version · $size',
       PackFailed(:final error) => 'Failed · ${error.message}',
       _ => info.flags.downloaded ? 'Ready · $size' : 'Not downloaded · $size',
     };

@@ -1,0 +1,93 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  package:
+    name: Analyze and test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Check formatting
+        run: dart format --output=none --set-exit-if-changed .
+
+      - name: Analyze
+        run: flutter analyze --fatal-infos
+
+      - name: Test
+        run: flutter test
+
+      - name: Publish dry run
+        run: |
+          set -o pipefail
+          if output=$(flutter pub publish --dry-run 2>&1); then
+            echo "$output"
+            exit 0
+          fi
+          status=$?
+          echo "$output"
+          # Before the first release the version carries a -dev suffix and has no
+          # CHANGELOG section of its own, which pub reports as a warning and
+          # exits 65 for. Releasing removes it. Anything else is a real failure,
+          # so only this exact single-warning case is tolerated.
+          if echo "$output" | grep -q "Package has 1 warning" &&
+            echo "$output" | grep -q "doesn't mention current version"; then
+            echo "Tolerated: pre-release version has no CHANGELOG section yet."
+            exit 0
+          fi
+          exit $status
+
+  example:
+    name: Build example
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Select Xcode 26 or newer
+        run: |
+          # Managed Background Assets is iOS 26. Built against an older SDK the
+          # plugin does not compile at all, so fail loudly with the versions that
+          # were available rather than with a wall of missing-symbol errors.
+          latest=""
+          for app in /Applications/Xcode*.app; do
+            [ -d "$app" ] || continue
+            version=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' \
+              "$app/Contents/Info.plist" 2>/dev/null) || continue
+            echo "found $app -> $version"
+            major=${version%%.*}
+            if [ "$major" -ge 26 ] 2>/dev/null; then
+              latest="$app"
+            fi
+          done
+          if [ -z "$latest" ]; then
+            echo "No Xcode 26 or newer on this runner; the example needs the iOS 26 SDK."
+            exit 1
+          fi
+          echo "Selecting $latest"
+          sudo xcode-select -s "$latest/Contents/Developer"
+          xcodebuild -version
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Build for the iOS simulator
+        working-directory: example
+        run: |
+          flutter pub get
+          flutter build ios --simulator --no-codesign
