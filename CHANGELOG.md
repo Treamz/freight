@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+* Added `FreightBundle`, an `AssetBundle` backed by downloaded asset packs, and
+  `Freight.bundle()` to build one. A pack addresses files by the logical path
+  they had when it was built, which is what an asset key already is, so widgets
+  taking a key can read from packs without knowing where the bytes came from.
+  Keys no pack contains fall through to the app's own assets, so a single bundle
+  serves both; `FreightBundle.packsOnly` opts out of that when a silent fallback
+  would hide a pack that was never downloaded.
+* Added `FreightImage`, an `ImageProvider` reading from a downloaded pack. It
+  does not download one — an image widget is the wrong place to begin a transfer
+  that may be hundreds of megabytes, with nowhere to report progress.
+
 * Fixed detection of the Background Assets downloader extension, which looked
   only in the app's `PlugIns/` directory. ExtensionKit embeds extensions in
   `Extensions/` instead, so a correctly configured app was still told it had no

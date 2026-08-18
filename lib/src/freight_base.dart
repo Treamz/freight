@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'asset_pack.dart';
+import 'freight_bundle.dart';
 import 'pack_status.dart';
 import 'platform_channel.dart';
 
@@ -22,6 +23,13 @@ abstract final class Freight {
   ///
   /// Does not verify that the pack exists — call [AssetPack.info] for that.
   static AssetPack pack(String id) => AssetPack(id);
+
+  /// An [AssetBundle] that reads from downloaded packs.
+  ///
+  /// Install it with [DefaultAssetBundle] and widgets taking an asset key work
+  /// against packs without knowing it. Keys no pack contains fall through to
+  /// the app's own assets. Pass [inPack] to restrict lookups to one pack.
+  static FreightBundle bundle({String? inPack}) => FreightBundle(pack: inPack);
 
   /// Every pack the system knows about, downloaded or not.
   ///

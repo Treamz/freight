@@ -16,6 +16,8 @@ export 'src/exceptions.dart'
         PathNotFoundException,
         UnsupportedPlatformException;
 export 'src/freight_base.dart' show Freight;
+export 'src/freight_bundle.dart' show FreightBundle;
+export 'src/freight_image.dart' show FreightImage;
 export 'src/pack_status.dart'
     show
         PackDownloading,
