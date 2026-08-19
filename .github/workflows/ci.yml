@@ -10,9 +10,12 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  package:
-    name: Analyze and test
+  plugin:
+    name: Analyze and test freight
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/freight
     steps:
       - uses: actions/checkout@v5
 
@@ -45,6 +48,54 @@ jobs:
           # CHANGELOG section of its own, which pub reports as a warning and
           # exits 65 for. Releasing removes it. Anything else is a real failure,
           # so only this exact single-warning case is tolerated.
+          if echo "$output" | grep -q "Package has 1 warning" &&
+            echo "$output" | grep -q "doesn't mention current version"; then
+            echo "Tolerated: pre-release version has no CHANGELOG section yet."
+            exit 0
+          fi
+          exit $status
+
+  cli:
+    name: Analyze and test freight_cli
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/freight_cli
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: dart-lang/setup-dart@v1
+
+      - name: Install dependencies
+        run: dart pub get
+
+      - name: Check formatting
+        run: dart format --output=none --set-exit-if-changed .
+
+      - name: Analyze
+        run: dart analyze --fatal-infos
+
+      - name: Test
+        run: dart test
+
+      - name: Check it does not depend on the plugin
+        run: |
+          # The split only pays off while the two stay uncoupled: a dependency
+          # here would drag Flutter back into build-time tooling.
+          if grep -rq "package:freight/" lib bin test; then
+            echo "freight_cli imports freight; the packages must stay independent."
+            exit 1
+          fi
+
+      - name: Publish dry run
+        run: |
+          set -o pipefail
+          if output=$(dart pub publish --dry-run 2>&1); then
+            echo "$output"
+            exit 0
+          fi
+          status=$?
+          echo "$output"
           if echo "$output" | grep -q "Package has 1 warning" &&
             echo "$output" | grep -q "doesn't mention current version"; then
             echo "Tolerated: pre-release version has no CHANGELOG section yet."
@@ -87,7 +138,7 @@ jobs:
           channel: stable
 
       - name: Build for the iOS simulator
-        working-directory: example
+        working-directory: packages/freight/example
         run: |
           flutter pub get
           flutter build ios --simulator --no-codesign
@@ -116,16 +167,15 @@ jobs:
           fi
           sudo xcode-select -s "$latest/Contents/Developer"
 
-      - uses: subosito/flutter-action@v2
-        with:
-          channel: stable
+      - uses: dart-lang/setup-dart@v1
 
       - name: Build the example packs with the real tool
+        working-directory: packages/freight_cli
         run: |
-          flutter pub get
+          dart pub get
           dart run bin/freight.dart build \
-            --config example/freight.yaml \
-            --output build/packs \
+            --config ../freight/example/freight.yaml \
+            --output "$GITHUB_WORKSPACE/build/packs" \
             --base-url https://packs.example.invalid/packs
 
       - name: Check the archives contain the planned logical paths
@@ -167,3 +217,7 @@ jobs:
           if failures:
               sys.exit("\n".join(failures))
           CHECK
+
+      - name: Check doctor passes on the example
+        working-directory: packages/freight/example
+        run: dart run ../../freight_cli/bin/freight.dart doctor

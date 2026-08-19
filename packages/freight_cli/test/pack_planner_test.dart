@@ -1,8 +1,8 @@
 import 'dart:io';
 
-import 'package:flutter_test/flutter_test.dart';
-import 'package:freight/src/cli/pack_config.dart';
-import 'package:freight/src/cli/pack_planner.dart';
+import 'package:test/test.dart';
+import 'package:freight_cli/src/pack_config.dart';
+import 'package:freight_cli/src/pack_planner.dart';
 import 'package:path/path.dart' as p;
 
 void main() {

@@ -158,7 +158,7 @@ it to a hand-rolled static server.
 
 ### The extension target, precisely
 
-Assembled and built successfully in `example/ios`; these are the parts that
+Assembled and built successfully in `packages/freight/example/ios`; these are the parts that
 matter, and each one was a failure first:
 
 * Product type is `com.apple.product-type.extensionkit-extension`, not
@@ -255,6 +255,17 @@ packs:
 `root` is the load-bearing field. A file at `<root>/nested/deep.txt` is read
 back as `nested/deep.txt`, so the root is what decouples the logical paths from
 wherever the sources happen to sit in the repository.
+
+## Two packages
+
+`freight` is the plugin and depends on nothing but Flutter. `freight_cli` holds
+the build-time tooling and is pure Dart. They are split so an app shipping the
+plugin does not also carry a YAML parser, a glob matcher and an argument parser
+it never runs, and because a package nested inside another would be swept into
+the outer one's published archive.
+
+The split costs nothing in coupling: `freight_cli` does not import `freight`.
+The two share the `freight.yaml` format, not code.
 
 ## Where the work is
 

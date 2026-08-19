@@ -1,8 +1,8 @@
 import 'dart:io';
 
-import 'package:flutter_test/flutter_test.dart';
-import 'package:freight/src/cli/ba_package.dart';
-import 'package:freight/src/cli/doctor.dart';
+import 'package:test/test.dart';
+import 'package:freight_cli/src/ba_package.dart';
+import 'package:freight_cli/src/doctor.dart';
 import 'package:path/path.dart' as p;
 
 void main() {
