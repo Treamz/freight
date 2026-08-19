@@ -1,7 +1,7 @@
 import 'dart:io';
 
-import 'package:flutter_test/flutter_test.dart';
-import 'package:freight/src/cli/ba_package.dart';
+import 'package:test/test.dart';
+import 'package:freight_cli/src/ba_package.dart';
 
 /// Records what would have been executed.
 final class _FakeProcess {

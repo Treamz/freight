@@ -1,5 +1,5 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:freight/src/cli/pack_config.dart';
+import 'package:test/test.dart';
+import 'package:freight_cli/src/pack_config.dart';
 
 void main() {
   FreightConfig parse(String yaml) => FreightConfig.parse(yaml);

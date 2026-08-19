@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter_test/flutter_test.dart';
-import 'package:freight/src/cli/ba_package.dart';
-import 'package:freight/src/cli/builder.dart';
-import 'package:freight/src/cli/pack_config.dart';
+import 'package:test/test.dart';
+import 'package:freight_cli/src/ba_package.dart';
+import 'package:freight_cli/src/builder.dart';
+import 'package:freight_cli/src/pack_config.dart';
 import 'package:path/path.dart' as p;
 
 final class _FakeProcess {

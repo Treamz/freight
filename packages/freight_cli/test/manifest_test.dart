@@ -1,8 +1,8 @@
 import 'dart:convert';
 
-import 'package:flutter_test/flutter_test.dart';
-import 'package:freight/src/cli/manifest.dart';
-import 'package:freight/src/cli/pack_config.dart';
+import 'package:test/test.dart';
+import 'package:freight_cli/src/manifest.dart';
+import 'package:freight_cli/src/pack_config.dart';
 
 void main() {
   PackConfig pack({

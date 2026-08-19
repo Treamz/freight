@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+* Moved the `freight build` and `freight doctor` commands into a separate
+  `freight_cli` package, so an app depending on `freight` no longer carries
+  `args`, `glob`, `path` and `yaml` for tooling it never runs. This package now
+  depends on nothing but Flutter. Add `freight_cli` as a dev dependency to build
+  packs.
+
 * Added the `freight doctor` command. Managed Background Assets reports most
   misconfiguration by crashing on a device rather than returning an error, so
   `doctor` looks for those problems locally instead: a missing `BAAppGroupID`,

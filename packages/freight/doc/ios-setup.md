@@ -125,7 +125,7 @@ Delivery policies:
 Then:
 
 ```bash
-dart run freight build
+dart run freight_cli:freight build
 ```
 
 Archives land in `build/packs`, with the generated manifests beside them in
@@ -136,7 +136,7 @@ If you self-host, pass the base URL to also write the server's download
 manifest:
 
 ```bash
-dart run freight build --base-url https://cdn.example.com/packs
+dart run freight_cli:freight build --base-url https://cdn.example.com/packs
 ```
 
 Each pack's URL is that base plus the pack id **with no file extension**, so
@@ -168,7 +168,7 @@ final bytes = await Freight.read('berlin.tiles');
 ## Checking the setup
 
 ```bash
-dart run freight doctor
+dart run freight_cli:freight doctor
 ```
 
 Every check corresponds to something the platform otherwise reports late, on a
