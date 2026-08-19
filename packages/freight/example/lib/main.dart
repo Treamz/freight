@@ -119,6 +119,9 @@ class _PackTileState extends State<_PackTile> {
       builder: (context, snapshot) {
         final status = snapshot.data;
         return ListTile(
+          // Reading a file is the only proof that the pack's contents actually
+          // arrived; a status of "ready" is the system's word for it.
+          onTap: () => _read(),
           title: Text(widget.packId),
           subtitle: Text(_lastAction ?? _describe(status)),
           trailing: switch (status) {
@@ -143,6 +146,21 @@ class _PackTileState extends State<_PackTile> {
     );
   }
 
+  /// Reads a known file out of the pack and reports what came back.
+  Future<void> _read() async {
+    final path = widget.packId == 'tutorial' ? 'welcome.txt' : 'index.txt';
+    setState(() => _lastAction = 'reading $path…');
+    try {
+      final bytes = await Freight.read(path, inPack: widget.packId);
+      final text = String.fromCharCodes(bytes).trim();
+      if (mounted) {
+        setState(() => _lastAction = '$path: ${bytes.length} bytes "$text"');
+      }
+    } catch (e) {
+      if (mounted) setState(() => _lastAction = 'read failed: $e');
+    }
+  }
+
   Future<void> _run(String what, Future<void> Function() action) async {
     setState(() => _lastAction = '$what…');
     try {
@@ -159,6 +177,6 @@ class _PackTileState extends State<_PackTile> {
     PackPaused() => 'Paused',
     PackReady(:final version) => 'Ready, v$version',
     PackFailed(:final error) => 'Failed: ${error.message}',
-    _ => 'Tap to download',
+    _ => 'Tap row to read, arrow to download',
   };
 }
