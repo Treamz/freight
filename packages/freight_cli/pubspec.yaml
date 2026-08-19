@@ -1,6 +1,6 @@
 name: freight_cli
 description: "Build and check asset packs for the freight package: resolve globs, generate manifests, and package them with Apple's ba-package."
-version: 0.1.0-dev
+version: 0.1.0
 homepage: https://github.com/Treamz/freight
 repository: https://github.com/Treamz/freight/tree/main/packages/freight_cli
 issue_tracker: https://github.com/Treamz/freight/issues
