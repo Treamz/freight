@@ -1,0 +1,60 @@
+name: Publish
+
+on:
+  push:
+    tags:
+      - freight-v*
+      - freight_cli-v*
+
+jobs:
+  publish:
+    name: Publish to pub.dev
+    runs-on: ubuntu-latest
+    permissions:
+      # pub.dev authenticates the workflow by its OIDC token, so no secret is
+      # stored anywhere. It has to be enabled per package on pub.dev first,
+      # under Admin, which is only possible once the package exists — so the
+      # very first publish of each package is a manual one.
+      id-token: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Work out which package the tag names
+        id: package
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME}"
+          package="${tag%-v*}"
+          version="${tag##*-v}"
+          directory="packages/$package"
+
+          if [ ! -f "$directory/pubspec.yaml" ]; then
+            echo "Tag $tag names no package under packages/."
+            exit 1
+          fi
+
+          # The tag and the pubspec must agree, or the release would publish a
+          # version nobody reviewed.
+          declared=$(grep '^version:' "$directory/pubspec.yaml" | cut -d' ' -f2)
+          if [ "$declared" != "$version" ]; then
+            echo "Tag says $version but $directory/pubspec.yaml says $declared."
+            exit 1
+          fi
+
+          if ! grep -q "^## $version$" "$directory/CHANGELOG.md"; then
+            echo "$directory/CHANGELOG.md has no section for $version."
+            exit 1
+          fi
+
+          echo "directory=$directory" >> "$GITHUB_OUTPUT"
+          echo "package=$package" >> "$GITHUB_OUTPUT"
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Publish
+        working-directory: ${{ steps.package.outputs.directory }}
+        run: |
+          flutter pub get
+          flutter pub publish --force

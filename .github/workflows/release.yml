@@ -1,0 +1,107 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      package:
+        description: Which package to release.
+        required: true
+        type: choice
+        options: [freight, freight_cli]
+      bump:
+        description: Which part of the version to raise.
+        required: true
+        type: choice
+        options: [patch, minor, major]
+
+permissions:
+  contents: write
+
+jobs:
+  prepare:
+    name: Prepare a release branch
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Name the version and write the branch
+        id: prepare
+        run: |
+          set -euo pipefail
+          package="${{ inputs.package }}"
+          bump="${{ inputs.bump }}"
+          directory="packages/$package"
+
+          # The version is named here and nowhere else. A pull request that
+          # picked its own number could have it taken by another release
+          # landing first, and every check would still pass, because the
+          # pubspec and the CHANGELOG only ever agree with each other.
+          current=$(grep '^version:' "$directory/pubspec.yaml" | cut -d' ' -f2)
+          echo "current: $current"
+          base=${current%%-*}
+          major=$(echo "$base" | cut -d. -f1)
+          minor=$(echo "$base" | cut -d. -f2)
+          patch=$(echo "$base" | cut -d. -f3)
+
+          if [ "$current" != "$base" ]; then
+            # A pre-release becomes the release it was heading for, rather than
+            # skipping a number nobody has used.
+            next="$base"
+          else
+            case "$bump" in
+              major) next="$((major + 1)).0.0" ;;
+              minor) next="$major.$((minor + 1)).0" ;;
+              patch) next="$major.$minor.$((patch + 1))" ;;
+            esac
+          fi
+          echo "next: $next"
+
+          if ! grep -q '^## Unreleased' "$directory/CHANGELOG.md"; then
+            echo "$directory/CHANGELOG.md has no '## Unreleased' section."
+            exit 1
+          fi
+          if [ "$(sed -n '/^## Unreleased/,/^## /p' "$directory/CHANGELOG.md" \
+                  | grep -c '^\*')" -eq 0 ]; then
+            echo "The Unreleased section is empty; there is nothing to release."
+            exit 1
+          fi
+
+          sed -i "s/^version: .*/version: $next/" "$directory/pubspec.yaml"
+          sed -i "s/^## Unreleased$/## $next/" "$directory/CHANGELOG.md"
+
+          branch="release/$package-v$next"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git switch -c "$branch"
+          git add "$directory/pubspec.yaml" "$directory/CHANGELOG.md"
+          git commit -m "Release $package $next"
+          git push origin "$branch"
+
+          echo "version=$next" >> "$GITHUB_OUTPUT"
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+
+      - name: Summarise
+        run: |
+          set -euo pipefail
+          version="${{ steps.prepare.outputs.version }}"
+          branch="${{ steps.prepare.outputs.branch }}"
+          repository="${{ github.repository }}"
+          {
+            echo "## ${{ inputs.package }} $version prepared"
+            echo
+            echo "Open the pull request:"
+            echo
+            echo "https://github.com/$repository/compare/$branch?expand=1"
+            echo
+            echo "This workflow deliberately does not open it. A pull request"
+            echo "opened with a workflow's own token cannot start another"
+            echo "workflow, so the release commit would be the only commit in"
+            echo "the repository that nothing had checked."
+            echo
+            echo "After it merges, tag the merge commit and push the tag:"
+            echo
+            echo '```'
+            echo "git tag ${{ inputs.package }}-v$version"
+            echo "git push origin ${{ inputs.package }}-v$version"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
