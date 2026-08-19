@@ -229,8 +229,10 @@ declared and no trace of the directory the sources live in.
 **`ba-serve` logs failures only.** A silent server log says nothing either way,
 which cost hours before it was noticed. Reading a file is the only honest check.
 
-**Still unexercised: `FreightImage`.** Bytes have been read from a pack on
-hardware; nothing has decoded one into an image yet.
+**`FreightImage` works on hardware.** A PNG shipped in the `tutorial` pack
+decodes and renders from the pack on an iPhone, which also demonstrated the
+update path: the device dropped version 0, fetched version 1 from `ba-serve`,
+and drew the file that only the new version contains.
 
 ### Superseded
 
