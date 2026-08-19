@@ -221,6 +221,17 @@ limit: it ignores the development override, so nothing there will ever download.
 install-time download does not fire at all; `ensureDownloaded` has to be called
 explicitly, and `allPacks` stays empty until something asks.
 
+**The loop closed.** Reading `welcome.txt` out of the `tutorial` pack on an
+iPhone returns `Welcome to freight.` — the whole path from `freight.yaml`
+through `ba-package` to `Freight.read`, with the logical path exactly as
+declared and no trace of the directory the sources live in.
+
+**`ba-serve` logs failures only.** A silent server log says nothing either way,
+which cost hours before it was noticed. Reading a file is the only honest check.
+
+**Still unexercised: `FreightImage`.** Bytes have been read from a pack on
+hardware; nothing has decoded one into an image yet.
+
 ### Superseded
 
 An earlier version of this document concluded that Background Assets does not
@@ -322,10 +333,11 @@ README. `ensureDownloaded`, status stream, `read`/`resolve`. Example app against
 a local static server. Goal: prove the API against a real device before
 automating around it.
 
-**0.2 — `freight.yaml` and the CLI.** Done bar the device run: `freight build`
-packages with `ba-package`, `freight setup` generates the downloader extension
-target, and `freight doctor` checks a project. What remains is confirming a
-download on hardware. Generate `Manifest.json`, drive
+**0.2 — `freight.yaml` and the CLI. Done.** `freight build` packages with
+`ba-package`, `freight setup` generates the downloader extension target, and
+`freight doctor` checks a project. Confirmed on an iPhone: a pack declared in
+`freight.yaml` was packaged, downloaded by the device, and read back through
+`Freight.read` at the logical path the configuration declared. Generate `Manifest.json`, drive
 `ba-package`, emit the self-hosted download manifest, and — the part that
 matters — create the downloader extension target, set `BAAppGroupID`, and add
 the App Groups capability. This is where it stops being a wrapper.
