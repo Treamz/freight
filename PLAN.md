@@ -294,8 +294,16 @@ download on hardware. Generate `Manifest.json`, drive
 matters — create the downloader extension target, set `BAAppGroupID`, and add
 the App Groups capability. This is where it stops being a wrapper.
 
-**0.3 — Android.** Play Asset Delivery behind the same API; Gradle module
-generation in the CLI. First release where the abstraction is proven.
+**0.3 — Android.** The runtime half is done: Play Asset Delivery behind the same
+channel contract, with the asymmetries recorded rather than hidden. Gradle
+asset pack module generation in the CLI is what remains before packs can
+actually ship to Android.
+
+The abstraction held. Three things did not map cleanly and are handled at the
+edge rather than in the shared API: Play cannot enumerate packs an app only
+declares, it has no per-pack update notion, and it has no per-pack listener, so
+a stream scoped to one pack is filtered natively on Android and by the system on
+iOS. None of that reached the Dart surface.
 
 **0.4 — `FreightBundle`, `FreightImage`.** Flutter-native asset integration.
 The part that earns likes.

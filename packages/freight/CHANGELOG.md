@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+* Added the Android runtime, backed by Play Asset Delivery, behind the same API
+  as iOS: `ensureDownloaded`, the status stream, `read` and `resolve` all work
+  against downloaded asset packs, and install-time packs fall back to the
+  ordinary asset manager. Two differences are worth knowing rather than
+  discovering: `allPacks` lists only packs already on the device, because Play
+  has no API for the ones an app merely declares, and `requireLatest` does
+  nothing, because Play versions asset packs with the app. Generating the Gradle
+  asset pack modules is still to come, so packs cannot be shipped to Android
+  from this package yet.
+
 * Moved the `freight build` and `freight doctor` commands into a separate
   `freight_cli` package, so an app depending on `freight` no longer carries
   `args`, `glob`, `path` and `yaml` for tooling it never runs. This package now
