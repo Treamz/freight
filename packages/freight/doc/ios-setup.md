@@ -26,6 +26,17 @@ download anything until you finish the steps below.
 
 ## 1. Add the downloader extension
 
+The quickest route, for a project laid out the way `flutter create` leaves it:
+
+```bash
+dart run freight_cli:freight setup
+```
+
+That writes the extension, wires the app group into both targets and adds the
+target to the Xcode project, then you can skip to step 3. It refuses projects it
+does not recognise rather than guessing — in which case, or if you would rather
+do it yourself, carry on here.
+
 In Xcode: **File → New → Target → Background Download Extension**.
 
 Choose the extension type when prompted:

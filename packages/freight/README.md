@@ -51,9 +51,10 @@ That resolves each pack's globs, generates the manifests and packages them with
 Apple's `ba-package`. Add `--base-url https://cdn.example.com/packs` to also
 write the download manifest a self-hosting server needs.
 
-Before that, check the setup:
+Set up the iOS project once, and check it:
 
 ```bash
+dart run freight_cli:freight setup
 dart run freight_cli:freight doctor
 ```
 

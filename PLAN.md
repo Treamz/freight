@@ -286,9 +286,10 @@ README. `ensureDownloaded`, status stream, `read`/`resolve`. Example app against
 a local static server. Goal: prove the API against a real device before
 automating around it.
 
-**0.2 — `freight.yaml` and the CLI.** The configuration format, glob resolution
-and manifest generation are done and tested; what remains is invoking
-`ba-package` and generating the extension target. Generate `Manifest.json`, drive
+**0.2 — `freight.yaml` and the CLI.** Done bar the device run: `freight build`
+packages with `ba-package`, `freight setup` generates the downloader extension
+target, and `freight doctor` checks a project. What remains is confirming a
+download on hardware. Generate `Manifest.json`, drive
 `ba-package`, emit the self-hosted download manifest, and — the part that
 matters — create the downloader extension target, set `BAAppGroupID`, and add
 the App Groups capability. This is where it stops being a wrapper.

@@ -5,6 +5,9 @@ import 'package:freight_cli/src/ba_package.dart';
 import 'package:freight_cli/src/builder.dart';
 import 'package:freight_cli/src/doctor.dart';
 import 'package:freight_cli/src/pack_config.dart';
+import 'package:freight_cli/src/setup.dart';
+import 'package:freight_cli/src/xcode/extension_target.dart';
+import 'package:freight_cli/src/xcode/pbxproj.dart';
 import 'package:path/path.dart' as p;
 
 Future<void> main(List<String> arguments) async {
@@ -12,6 +15,7 @@ Future<void> main(List<String> arguments) async {
       ArgParser()
         ..addCommand('build', _buildParser())
         ..addCommand('doctor', _doctorParser())
+        ..addCommand('setup', _setupParser())
         ..addFlag(
           'help',
           abbr: 'h',
@@ -41,6 +45,8 @@ Future<void> main(List<String> arguments) async {
         await _build(command);
       case 'doctor':
         await _doctor(command);
+      case 'setup':
+        await _setup(command);
       default:
         _printUsage(parser);
         exit(64);
@@ -51,6 +57,12 @@ Future<void> main(List<String> arguments) async {
   } on BaPackageException catch (e) {
     stderr.writeln(e);
     exit(70);
+  } on UnsupportedProjectException catch (e) {
+    stderr.writeln(e);
+    exit(65);
+  } on PbxprojException catch (e) {
+    stderr.writeln(e);
+    exit(65);
   } on FileSystemException catch (e) {
     stderr.writeln('${e.message}: ${e.path}');
     exit(66);
@@ -75,6 +87,57 @@ ArgParser _buildParser() =>
             'Also write a download manifest for self-hosting, with pack URLs '
             'under this base. Omit for Apple-hosted packs.',
       );
+
+ArgParser _setupParser() =>
+    ArgParser()
+      ..addOption(
+        'target',
+        defaultsTo: 'FreightDownloader',
+        help: 'Name for the generated downloader extension target.',
+      )
+      ..addOption(
+        'app-target',
+        defaultsTo: 'Runner',
+        help: 'The app target to embed the extension in.',
+      )
+      ..addOption(
+        'app-group',
+        help: 'App group id. Defaults to "group." plus the app\'s bundle id.',
+      );
+
+Future<void> _setup(ArgResults args) async {
+  final result = await setUpIos(
+    projectRoot: Directory.current.path,
+    appTargetName: args.option('app-target')!,
+    targetName: args.option('target')!,
+    appGroup: args.option('app-group'),
+  );
+
+  if (result.target.alreadyPresent) {
+    stdout.writeln(
+      'The project already has a "${result.target.targetName}" target. '
+      'Nothing to do.',
+    );
+    return;
+  }
+
+  for (final path in result.created) {
+    stdout.writeln('created  $path');
+  }
+  for (final path in result.modified) {
+    stdout.writeln('modified $path');
+  }
+  stdout
+    ..writeln()
+    ..writeln('Added the "${result.target.targetName}" extension target')
+    ..writeln('  bundle id: ${result.target.bundleId}')
+    ..writeln('  app group: ${result.target.appGroup}')
+    ..writeln()
+    ..writeln(
+      'Open the project in Xcode once so it enables the App Groups capability '
+      'on both targets, then run "freight doctor".',
+    );
+}
 
 ArgParser _doctorParser() =>
     ArgParser()..addOption(
@@ -143,6 +206,9 @@ void _printUsage(ArgParser parser) {
     ..writeln('Commands:')
     ..writeln('  build   Package every asset pack in the configuration.')
     ..writeln('  doctor  Check the configuration and the iOS project setup.')
+    ..writeln(
+      '  setup   Add the downloader extension target to the iOS project.',
+    )
     ..writeln()
     ..writeln('Options for "build":')
     ..writeln(parser.commands['build']!.usage)

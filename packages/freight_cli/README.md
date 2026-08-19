@@ -27,6 +27,26 @@ freight doctor
 
 ## Commands
 
+### `freight setup`
+
+Adds the downloader extension target to the iOS project, so you do not have to
+click through Xcode's template and match up the app group by hand.
+
+```bash
+dart run freight_cli:freight setup
+```
+
+It writes the extension's source, `Info.plist` and entitlements, gives the app
+the same app group, sets `BAAppGroupID`, and edits `project.pbxproj` to add the
+target and embed it in the right build phase. Running it twice does nothing the
+second time.
+
+It is deliberately narrow: it handles the layout `flutter create` produces and
+**refuses anything else** rather than guessing, because a wrong edit to
+`project.pbxproj` costs far more to recover from than adding the target by hand.
+Xcode's own **Background Download Extension** template is always the fallback —
+see [the setup guide](../freight/doc/ios-setup.md).
+
 ### `freight build`
 
 Reads `freight.yaml`, resolves each pack's globs, writes the manifests and
