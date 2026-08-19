@@ -77,6 +77,22 @@ void main() {
       expect(files, ['berlin.tiles', 'index.txt']);
     });
 
+    test('distinguishes ** from **/ at the root', () {
+      // The pattern people reach for is "**/*.tiles", and it silently drops
+      // files sitting directly in root, because "**/" requires a directory.
+      // Both the documentation and the example got this wrong first.
+      write('assets/maps/berlin.tiles');
+      write('assets/maps/sub/prague.tiles');
+      write('assets/maps/index.txt');
+
+      expect(plan(pack(files: ['**/*.tiles'])).files, ['sub/prague.tiles']);
+      expect(plan(pack(files: ['*.tiles'])).files, ['berlin.tiles']);
+      expect(plan(pack(files: ['**.tiles'])).files, [
+        'berlin.tiles',
+        'sub/prague.tiles',
+      ]);
+    });
+
     test('subtracts excludes after matching', () {
       write('assets/maps/berlin.tiles');
       write('assets/maps/draft_wip.tiles');
