@@ -281,3 +281,34 @@ jobs:
           # needs a device with Play services and a published app.
           flutter pub get
           flutter build apk --debug
+
+      - name: Stage the packs and check they reach the app bundle
+        working-directory: packages/freight/example
+        run: |
+          # Asset packs only exist in an app bundle, so the APK above proves
+          # nothing about them. This builds the bundle and asserts each pack is
+          # in it under the same logical paths the iOS archive records.
+          dart run ../../freight_cli/bin/freight.dart build --platform android
+          flutter build appbundle
+
+          aab=build/app/outputs/bundle/release/app-release.aab
+          python3 - "$aab" <<'CHECK'
+          import sys, zipfile
+
+          expected = {
+              "tutorial": ["nested/deep.txt", "steps.json", "welcome.txt"],
+              "maps_europe": ["berlin.tiles", "index.txt", "prague.tiles"],
+          }
+
+          names = set(zipfile.ZipFile(sys.argv[1]).namelist())
+          missing = []
+          for pack, files in expected.items():
+              for name in files:
+                  entry = f"{pack}/assets/{name}"
+                  if entry not in names:
+                      missing.append(entry)
+              print(f"{pack}: {len(files)} paths verified")
+
+          if missing:
+              sys.exit("missing from the bundle:\n" + "\n".join(missing))
+          CHECK

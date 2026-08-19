@@ -97,6 +97,8 @@ final class PackConfig {
   final List<String> platforms;
 }
 
+final RegExp _validPackId = RegExp(r'^[A-Za-z][A-Za-z0-9_]*$');
+
 /// A parsed `freight.yaml`.
 final class FreightConfig {
   const FreightConfig(this.packs);
@@ -139,6 +141,17 @@ final class FreightConfig {
           final id = (entry.key as YamlScalar).value;
           if (id is! String || id.isEmpty) {
             throw const FreightConfigException('pack ids must be strings');
+          }
+          // Play requires this shape of an asset pack module name, and a pack
+          // id is one id across both platforms — so it is enforced everywhere
+          // rather than discovered at the first Android build.
+          if (!_validPackId.hasMatch(id)) {
+            throw FreightConfigException(
+              'is not a usable pack id. It must start with a letter and '
+              'contain only letters, numbers and underscores, which is what '
+              'Play requires of an asset pack module',
+              pack: id,
+            );
           }
           return _parsePack(id, entry.value);
         })

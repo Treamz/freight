@@ -295,9 +295,10 @@ matters — create the downloader extension target, set `BAAppGroupID`, and add
 the App Groups capability. This is where it stops being a wrapper.
 
 **0.3 — Android.** The runtime half is done: Play Asset Delivery behind the same
-channel contract, with the asymmetries recorded rather than hidden. Gradle
-asset pack module generation in the CLI is what remains before packs can
-actually ship to Android.
+channel contract, with the asymmetries recorded rather than hidden. The CLI generates the Gradle asset
+pack modules, and an app bundle built from the example carries both packs with
+the same logical paths and the right delivery types. What remains is running any
+of it against Play services.
 
 The abstraction held. Three things did not map cleanly and are handled at the
 edge rather than in the shared API: Play cannot enumerate packs an app only

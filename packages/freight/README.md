@@ -11,10 +11,9 @@ Google Play Asset Delivery behind one Dart API.
 > `BADownloaderExtension` path, which this package deliberately does not
 > implement.
 >
-> **Android is partly there.** The runtime reads and downloads Play Asset
-> Delivery packs through the same API, but `freight_cli` cannot generate the
-> Gradle asset pack modules yet, so there is no way to ship packs to Android
-> from this package alone.
+> **Android is not yet proven on a device.** The runtime reads and downloads
+> Play Asset Delivery packs through the same API, and `freight_cli` generates
+> the Gradle asset pack modules, but none of it has run against Play services.
 
 ## The problem
 

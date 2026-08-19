@@ -5,6 +5,7 @@ plugins {
 }
 
 android {
+    assetPacks += listOf(":tutorial", ":maps_europe")
     namespace = "dev.treamz.freight_example"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
