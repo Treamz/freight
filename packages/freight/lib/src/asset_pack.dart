@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'dart:typed_data';
 
+import 'exceptions.dart';
 import 'pack_status.dart';
 import 'platform_channel.dart';
 
@@ -29,9 +31,38 @@ final class AssetPack {
 
   /// Follows this pack's state until the subscription is cancelled.
   ///
-  /// The system downloads packs on its own schedule, so updates arrive whether
-  /// or not this app asked for them. Broadcast: listening twice is cheap.
-  Stream<PackStatus> watch() => FreightPlatform.instance.watch(id);
+  /// The current state is emitted immediately, then every change. Without that
+  /// first value a pack that is simply sitting there downloaded would look
+  /// unknown to a [StreamBuilder] until something happened to it, which for an
+  /// already-downloaded pack may be never.
+  ///
+  /// The system downloads and evicts packs on its own schedule, so changes
+  /// arrive whether or not this app asked for them.
+  Stream<PackStatus> watch() {
+    final controller = StreamController<PackStatus>();
+    StreamSubscription<PackStatus>? updates;
+
+    controller
+      ..onListen = () async {
+        try {
+          final current = await status();
+          if (!controller.isClosed) controller.add(current);
+        } on FreightException {
+          // A pack the system has not heard of yet still deserves the live
+          // stream: it may appear once a manifest arrives.
+        }
+        if (controller.isClosed) return;
+        updates = FreightPlatform.instance
+            .watch(id)
+            .listen(controller.add, onError: controller.addError);
+      }
+      ..onCancel = () async {
+        await updates?.cancel();
+        updates = null;
+      };
+
+    return controller.stream;
+  }
 
   /// Downloads the pack if it is not already present, and completes when its
   /// files are readable.

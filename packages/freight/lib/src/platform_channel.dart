@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 import 'exceptions.dart';
@@ -22,10 +23,21 @@ abstract final class _Wire {
 /// The bridge to the native asset-pack managers.
 ///
 /// One instance per isolate; the platform channels are inherently singletons.
-final class FreightPlatform {
+class FreightPlatform {
   FreightPlatform._();
 
-  static final FreightPlatform instance = FreightPlatform._();
+  /// For test doubles.
+  @visibleForTesting
+  FreightPlatform.forTesting();
+
+  static FreightPlatform _instance = FreightPlatform._();
+
+  static FreightPlatform get instance => _instance;
+
+  /// Replaces the bridge, so behaviour built on top of it can be tested
+  /// without a live `AssetPackManager`.
+  @visibleForTesting
+  static set instance(FreightPlatform value) => _instance = value;
 
   Stream<PackStatus>? _allPacksStream;
   final Map<String, Stream<PackStatus>> _packStreams = {};

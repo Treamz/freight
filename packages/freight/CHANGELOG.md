@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+* `AssetPack.watch` now emits the pack's current state before any change. It
+  previously forwarded only the platform's change notifications, so a pack that
+  was simply sitting there downloaded looked unknown to a `StreamBuilder` until
+  something happened to it — which for an already-downloaded pack may be never.
+  On a device this showed up as the UI offering to download a pack it already
+  had.
+
 * Fixed the Background Assets extension point identifier, which was
   `com.apple.background-assets.content-request` and should be
   `com.apple.background-asset-downloader-extension`. With the wrong one the
