@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.0
 
 * `freight setup` now writes `BAHasManagedAssetPacks` and `BAUsesAppleHosting`
   alongside `BAAppGroupID`, and generates the extension with the correct
