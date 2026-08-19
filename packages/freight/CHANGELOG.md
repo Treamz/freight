@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.0
 
 * Verified `FreightImage` on hardware: a PNG shipped in an asset pack decodes and
   renders from the pack on an iPhone. The example draws it, which is what
