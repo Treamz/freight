@@ -22,6 +22,12 @@ not import `freight` — the two share the `freight.yaml` format, not code.
 [Setting up an iOS project](packages/freight/doc/ios-setup.md) walks through
 what Managed Background Assets needs from the host app.
 
+## Releasing
+
+Both packages carry their own versions and tags. See
+[RELEASING.md](RELEASING.md); the short version is that a workflow names the
+version and CHANGELOG entries live under `## Unreleased` until it does.
+
 ## License
 
 MIT
