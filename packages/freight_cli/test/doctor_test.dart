@@ -48,8 +48,16 @@ packs:
     'com.apple.security.application-groups': [group],
   });
 
-  void wellFormedIosProject({String group = 'group.com.example.app'}) {
-    plist('ios/Runner/Info.plist', {'BAAppGroupID': group});
+  void wellFormedIosProject({
+    String group = 'group.com.example.app',
+    bool managed = true,
+    bool appleHosting = true,
+  }) {
+    plist('ios/Runner/Info.plist', {
+      'BAAppGroupID': group,
+      if (managed) 'BAHasManagedAssetPacks': true,
+      if (appleHosting) 'BAUsesAppleHosting': true,
+    });
     appGroupEntitlement('ios/Runner/Runner.entitlements', group);
     plist('ios/Downloader/Info.plist', {
       'EXAppExtensionAttributes': {
@@ -284,6 +292,34 @@ packs:
         find(await doctor(toolExitCode: 72), 'ba-package'),
         hasStatus(CheckStatus.fail),
       );
+    });
+
+    test(
+      'fails without BAHasManagedAssetPacks, which crashes at runtime',
+      () async {
+        // The framework traps rather than returning an error, and the crash
+        // names neither the key nor the app, so this check earns its keep.
+        config();
+        write('assets/tutorial/welcome.txt');
+        wellFormedIosProject(managed: false);
+
+        expect(
+          find(await doctor(), 'BAHasManagedAssetPacks'),
+          hasStatus(CheckStatus.fail),
+        );
+      },
+    );
+
+    test('only warns without BAUsesAppleHosting', () async {
+      // Self-hosting is legitimate; it just brings further requirements the
+      // framework enforces by trapping.
+      config();
+      write('assets/tutorial/welcome.txt');
+      wellFormedIosProject(appleHosting: false);
+
+      final check = find(await doctor(), 'BAUsesAppleHosting');
+      expect(check, hasStatus(CheckStatus.warn));
+      expect(check.fix, contains('https'));
     });
 
     test(

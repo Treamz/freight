@@ -82,8 +82,33 @@ back out, so both targets need the same group.
    <string>group.com.example.app</string>
    ```
 
-Set `BAAppGroupID` in the app's `Info.plist`, not the extension's. Both targets
-need the entitlement; only the app needs the key.
+## 2a. Three keys on the app target
+
+These go in the **app's** `Info.plist`, not the extension's. Both targets need
+the App Groups entitlement; only the app needs these keys.
+
+```xml
+<key>BAAppGroupID</key>
+<string>group.com.example.app</string>
+<key>BAHasManagedAssetPacks</key>
+<true/>
+<key>BAUsesAppleHosting</key>
+<true/>
+```
+
+`freight setup` writes all three.
+
+Getting them wrong is expensive, because the framework enforces them by
+**trapping**, not by returning an error — the app dies with a message that names
+neither the key nor your code:
+
+* Without `BAHasManagedAssetPacks`, `AssetPackManager` refuses to start.
+* `BAUsesAppleHosting` also switches off a set of info-dictionary checks. Turn
+  it off only if you self-host, and then the app must additionally provide
+  `BAManifestURL` — **which must be `https://`; plain HTTP traps** — and a
+  `BAInitialDownloadRestrictions` dictionary containing
+  `BADownloadDomainAllowList` (at least one domain), `BADownloadAllowance` and
+  `BAEssentialDownloadAllowance`.
 
 ## 3. Point the app at your packs
 
@@ -155,16 +180,36 @@ serve the archive at `/packs/maps_europe`, not `/packs/maps_europe.aar`.
 
 ## 5. Test on a device
 
-**Background Assets does not work on the iOS Simulator.** It requires a real
-signing identity, and Apple's local server cannot redirect a simulator. An app
-that is configured correctly still traps there.
+Local testing works, but not the way production does, and every step below was
+learned the hard way.
 
-Apple ships a development server:
+**The Simulator ignores the development override.** The plugin itself runs there
+— calls reach `AssetPackManager` and errors come back correctly — but no pack
+will ever download, because the simulator never asks the mock server. Use it to
+exercise your code, and a device to exercise delivery.
+
+**The mock server speaks HTTPS only**, and the device must trust its
+certificate. `ba-serve` picks a TLS identity out of your keychain, so there has
+to be one for the host you serve as:
 
 ```bash
-xcrun ba-serve serve build/packs
-xcrun ba-serve url-override        # point a device at it
+xcrun ba-serve serve build/packs/*.aar \
+  --host your-mac.local --port 57747 --choose-identity-automatically
 ```
+
+If you use a self-signed certificate, install it on the device **and** enable
+full trust for it under Settings → General → About → Certificate Trust
+Settings. Without that second step the handshake fails with `-9829` and the app
+simply never downloads anything.
+
+**Point the device at it** in Settings → Developer → Background Assets Testing →
+Development Overrides, as `https://your-mac.local:57747` — scheme and port, no
+path.
+
+**Nothing downloads on its own.** In production an `essential` or `prefetch`
+pack arrives during installation; under a development override that trigger does
+not fire at all. Call `ensureDownloaded` yourself to fetch anything, and expect
+`Freight.allPacks` to be empty until you do.
 
 ## Reading packs from Dart
 
@@ -228,7 +273,7 @@ details below are written down. You only need them if you are doing the same.
   <key>EXAppExtensionAttributes</key>
   <dict>
     <key>EXExtensionPointIdentifier</key>
-    <string>com.apple.background-assets.content-request</string>
+    <string>com.apple.background-asset-downloader-extension</string>
   </dict>
   ```
 

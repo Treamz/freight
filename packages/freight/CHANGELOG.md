@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+* Fixed the Background Assets extension point identifier, which was
+  `com.apple.background-assets.content-request` and should be
+  `com.apple.background-asset-downloader-extension`. With the wrong one the
+  system never registers the downloader extension, and `AssetPackManager` traps
+  at first use with a message blaming the app for having no extension — on the
+  Simulator and on hardware alike. Nothing else about the target was wrong,
+  which is why this took a device to find.
+
 * Documented that an install-time pack on Android cannot be resolved to a file
   path or read through a scoped bundle: Play merges those assets into the app
   itself, where they lose their pack identity. `Freight.read` still finds them

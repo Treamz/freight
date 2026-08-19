@@ -11,7 +11,7 @@ import 'pack_planner.dart';
 
 /// The extension point a Background Assets downloader extension declares.
 const backgroundAssetsExtensionPoint =
-    'com.apple.background-assets.content-request';
+    'com.apple.background-asset-downloader-extension';
 
 /// Reads a property list. Injectable so the checks can be tested without
 /// macOS — the default shells out to `plutil`, which also handles binary
@@ -356,7 +356,35 @@ List<Check> _checkAppGroup(
   }
 
   final group = declaring.first.value['BAAppGroupID']! as String;
-  final checks = <Check>[Check.pass('BAAppGroupID', detail: group)];
+  final appPlist = declaring.first.value;
+  final checks = <Check>[
+    Check.pass('BAAppGroupID', detail: group),
+    // Without it the framework traps on first use rather than returning an
+    // error, and the crash names neither the key nor the app.
+    if (appPlist['BAHasManagedAssetPacks'] == true)
+      const Check.pass('BAHasManagedAssetPacks')
+    else
+      const Check.fail(
+        'BAHasManagedAssetPacks',
+        detail: "not set in the app's Info.plist",
+        fix:
+            'Add BAHasManagedAssetPacks = YES. Managed Background Assets '
+            'refuses to start without it, by crashing.',
+      ),
+    // Apple hosting also switches off the info-dictionary checks a self-hosted
+    // app must satisfy in full, so its absence is only worth a warning.
+    if (appPlist['BAUsesAppleHosting'] == true)
+      const Check.pass('BAUsesAppleHosting')
+    else
+      const Check.warn(
+        'BAUsesAppleHosting',
+        detail: 'not set, so this app is treated as self-hosted',
+        fix:
+            'Self-hosting additionally requires BAManifestURL over https and a '
+            'BAInitialDownloadRestrictions dictionary; the framework traps if '
+            'either is missing or the URL is not https.',
+      ),
+  ];
 
   final holders =
       appGroups.entries

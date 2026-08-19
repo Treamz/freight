@@ -47,7 +47,7 @@ public class FreightPlugin: NSObject, FlutterPlugin {
             as? [String: Any],
           let point = attributes["EXExtensionPointIdentifier"] as? String
         else { return false }
-        return point == "com.apple.background-assets.content-request"
+        return point == "com.apple.background-asset-downloader-extension"
       }
     }
   }
