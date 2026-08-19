@@ -27,7 +27,8 @@ dev_dependencies:
 flutter:
   plugin:
     platforms:
-      # Android arrives in 0.3 — see PLAN.md. Declaring it before it exists
-      # would make `flutter build` succeed while every call throws at runtime.
+      android:
+        package: dev.treamz.freight
+        pluginClass: FreightPlugin
       ios:
         pluginClass: FreightPlugin

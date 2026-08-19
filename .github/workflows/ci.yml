@@ -257,3 +257,27 @@ jobs:
       - name: Check doctor passes on the example
         working-directory: packages/freight/example
         run: dart run ../../freight_cli/bin/freight.dart doctor
+
+  android:
+    name: Build example for Android
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Build the APK
+        working-directory: packages/freight/example
+        run: |
+          # Compiles the Kotlin bridge, which nothing on the Dart or iOS side
+          # would catch. Play Asset Delivery cannot be exercised here — that
+          # needs a device with Play services and a published app.
+          flutter pub get
+          flutter build apk --debug

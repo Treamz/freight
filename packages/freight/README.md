@@ -9,7 +9,12 @@ Google Play Asset Delivery behind one Dart API.
 > **iOS 26+ only.** `freight` targets Managed Background Assets, introduced in
 > iOS 26. Apps supporting iOS 25 and earlier need the legacy
 > `BADownloaderExtension` path, which this package deliberately does not
-> implement. Android support lands in 0.3.
+> implement.
+>
+> **Android is partly there.** The runtime reads and downloads Play Asset
+> Delivery packs through the same API, but `freight_cli` cannot generate the
+> Gradle asset pack modules yet, so there is no way to ship packs to Android
+> from this package alone.
 
 ## The problem
 
