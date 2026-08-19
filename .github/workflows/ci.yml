@@ -143,6 +143,42 @@ jobs:
           flutter pub get
           flutter build ios --simulator --no-codesign
 
+      - name: Generate an extension target into a fresh app and build it
+        run: |
+          # The strongest check available without a device: freight setup edits
+          # project.pbxproj by splicing text, and the only real proof that the
+          # result is a valid project is Xcode building it.
+          cd "$RUNNER_TEMP"
+          flutter create --platforms=ios --org com.example -i swift setup_probe
+          cd setup_probe
+          dart run "$GITHUB_WORKSPACE/packages/freight_cli/bin/freight.dart" setup
+
+          # Idempotent: a second run must change nothing.
+          before=$(shasum ios/Runner.xcodeproj/project.pbxproj | cut -d' ' -f1)
+          dart run "$GITHUB_WORKSPACE/packages/freight_cli/bin/freight.dart" setup
+          after=$(shasum ios/Runner.xcodeproj/project.pbxproj | cut -d' ' -f1)
+          if [ "$before" != "$after" ]; then
+            echo "Running setup twice changed the project."
+            exit 1
+          fi
+
+          flutter build ios --simulator
+
+          appex="build/ios/iphonesimulator/Runner.app/Extensions/FreightDownloader.appex"
+          if [ ! -d "$appex" ]; then
+            echo "The extension was not embedded at $appex"
+            find build/ios/iphonesimulator/Runner.app -name '*.appex' || true
+            exit 1
+          fi
+          point=$(/usr/libexec/PlistBuddy -c \
+            'Print :EXAppExtensionAttributes:EXExtensionPointIdentifier' \
+            "$appex/Info.plist")
+          if [ "$point" != "com.apple.background-assets.content-request" ]; then
+            echo "Wrong extension point: $point"
+            exit 1
+          fi
+          echo "Extension embedded and declaring $point"
+
   packs:
     name: Package assets
     runs-on: macos-latest
