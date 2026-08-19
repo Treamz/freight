@@ -55,6 +55,14 @@ jobs:
           fi
           exit $status
 
+      - name: Score with pana
+        run: |
+          dart pub global activate pana
+          # The threshold is exactly the deduction for a CHANGELOG that does not
+          # mention the pubspec's version, which is unavoidable while entries
+          # live under "Unreleased". Drop it to 0 after the first release.
+          dart pub global run pana --no-warning --exit-code-threshold 5 .
+
   cli:
     name: Analyze and test freight_cli
     runs-on: ubuntu-latest
@@ -102,6 +110,14 @@ jobs:
             exit 0
           fi
           exit $status
+
+      - name: Score with pana
+        run: |
+          dart pub global activate pana
+          # The threshold is exactly the deduction for a CHANGELOG that does not
+          # mention the pubspec's version, which is unavoidable while entries
+          # live under "Unreleased". Drop it to 0 after the first release.
+          dart pub global run pana --no-warning --exit-code-threshold 5 .
 
   example:
     name: Build example

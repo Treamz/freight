@@ -1,0 +1,16 @@
+# Two packs, one delivered during installation and one on request.
+#
+# `root` is the field that matters most: a file at <root>/nested/deep.txt is
+# read back as "nested/deep.txt", whatever the sources are called here.
+packs:
+  tutorial:
+    delivery: prefetch           # essential | prefetch | onDemand
+    events: [firstInstallation]  # automatic policies only
+    root: assets/tutorial
+    files: ["**"]
+
+  maps_europe:
+    delivery: onDemand
+    root: assets/maps/europe
+    files: ["**.tiles", "index.txt"]
+    exclude: ["**draft_*.tiles"]
