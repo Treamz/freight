@@ -189,7 +189,7 @@ jobs:
           point=$(/usr/libexec/PlistBuddy -c \
             'Print :EXAppExtensionAttributes:EXExtensionPointIdentifier' \
             "$appex/Info.plist")
-          if [ "$point" != "com.apple.background-assets.content-request" ]; then
+          if [ "$point" != "com.apple.background-asset-downloader-extension" ]; then
             echo "Wrong extension point: $point"
             exit 1
           fi

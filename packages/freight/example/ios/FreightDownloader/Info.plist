@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>BAAppGroupID</key>
+	<string>group.dev.treamz.freightExample</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleExecutable</key>
@@ -21,9 +23,7 @@
 	<key>EXAppExtensionAttributes</key>
 	<dict>
 		<key>EXExtensionPointIdentifier</key>
-		<string>com.apple.background-assets.content-request</string>
+		<string>com.apple.background-asset-downloader-extension</string>
 	</dict>
-	<key>BAAppGroupID</key>
-	<string>group.dev.treamz.freightExample</string>
 </dict>
 </plist>

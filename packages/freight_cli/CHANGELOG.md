@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+* `freight setup` now writes `BAHasManagedAssetPacks` and `BAUsesAppleHosting`
+  alongside `BAAppGroupID`, and generates the extension with the correct
+  extension point identifier. Managed Background Assets enforces all of these by
+  trapping rather than returning an error, so a project missing one crashed with
+  a message that named neither the key nor the caller.
+* `freight doctor` checks the two new keys, failing on a missing
+  `BAHasManagedAssetPacks` and warning when `BAUsesAppleHosting` is absent —
+  self-hosting is legitimate, but it brings further requirements the framework
+  also enforces by trapping.
+
 * Corrected the glob patterns in the documentation and the example. `**/*.tiles`
   matches only files inside a subdirectory, so a pack written that way silently
   dropped everything sitting directly in its root — use `**.tiles`. The

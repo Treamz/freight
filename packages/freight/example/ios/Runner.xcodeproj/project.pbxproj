@@ -803,6 +803,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				CODE_SIGN_ENTITLEMENTS = FreightDownloader/FreightDownloader.entitlements;
+				DEVELOPMENT_TEAM = 64QDKH3589;
 				"CODE_SIGN_IDENTITY[sdk=iphonesimulator*]" = "-";
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = FreightDownloader/Info.plist;
@@ -821,6 +822,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				CODE_SIGN_ENTITLEMENTS = FreightDownloader/FreightDownloader.entitlements;
+				DEVELOPMENT_TEAM = 64QDKH3589;
 				"CODE_SIGN_IDENTITY[sdk=iphonesimulator*]" = "-";
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = FreightDownloader/Info.plist;
@@ -840,6 +842,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				CODE_SIGN_ENTITLEMENTS = FreightDownloader/FreightDownloader.entitlements;
+				DEVELOPMENT_TEAM = 64QDKH3589;
 				"CODE_SIGN_IDENTITY[sdk=iphonesimulator*]" = "-";
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = FreightDownloader/Info.plist;

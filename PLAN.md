@@ -114,7 +114,7 @@ validated: The app lacks a Background Assets downloader extension.
    ```
 
    But the target must exist, carry
-   `EXExtensionPointIdentifier = com.apple.background-assets.content-request`,
+   `EXExtensionPointIdentifier = com.apple.background-asset-downloader-extension`,
    and be embedded in the app.
 
 Because these trap, the plugin checks both *before* touching `AssetPackManager`
@@ -177,21 +177,57 @@ matter, and each one was a failure first:
 * The extension must be signed. `CODE_SIGNING_ALLOWED = NO` produces an appex
   that `extensionkitd` never registers.
 
-### Simulator does not run Background Assets
+### What the device run established
 
-The end-to-end download is **not yet proven**. With a correctly built and
-embedded extension, `AssetPackManager` still traps with "The app lacks a
-Background Assets downloader extension" on the iOS 26.5 simulator, and no
-`FreightDownloader` registration appears in the system log.
+Everything below cost a real device to find, and most of it contradicts what the
+code assumed.
 
-This matches Apple's own guidance: Background Assets checks for a real signing
-identity, and the `ba-serve` URL override is known not to work in the simulator.
-Physical-device testing is the documented path.
+**The extension point identifier was wrong.** `freight` used
+`com.apple.background-assets.content-request`, a string invented early and never
+checked. Xcode's own template says
+`com.apple.background-asset-downloader-extension`. With the wrong one the system
+never registers the extension and `AssetPackManager` traps with "the app lacks a
+Background Assets downloader extension" — on the Simulator and on hardware
+alike. This single string is why the earlier conclusion "Background Assets does
+not work on the Simulator" was wrong.
 
-Consequence for the plan: **0.2 cannot be finished on the simulator.** The next
-step is a device run with `ba-serve` and `ba-serve url-override`, and the CLI
-should not be written until the logical paths and policies are confirmed against
-one.
+**Three Info.plist keys are required on the app target**: `BAAppGroupID`,
+`BAHasManagedAssetPacks`, and `BAUsesAppleHosting` when Apple hosts the packs.
+The framework enforces them by trapping, and the message names neither the key
+nor the caller.
+
+**Self-hosting demands more, enforced the same way.** Read out of the framework
+binary, since no documentation lists them together: `BAManifestURL` must exist
+**and be https** — plain HTTP traps — alongside a `BAInitialDownloadRestrictions`
+dictionary with `BADownloadDomainAllowList` (non-empty), `BADownloadAllowance`
+and `BAEssentialDownloadAllowance`.
+
+**Packs really do download.** Before the strict keys were in place, a device
+running the example fetched the download manifest and pulled the `tutorial` pack
+by itself, exactly as its `prefetch` policy declares:
+
+```
+GET /download-manifest.json?platform=iOS  200
+GET /packs/tutorial                       200
+```
+
+**The bridge is proven end to end.** On the Simulator, tapping download produces
+`PackNotFoundException: No asset pack with id "tutorial"` — a real
+`ManagedBackgroundAssetsError` from `AssetPackManager`, translated through the
+channel into the typed Dart exception and rendered. Which is also the Simulator's
+limit: it ignores the development override, so nothing there will ever download.
+
+**Local testing is not production.** Under a development override the automatic
+install-time download does not fire at all; `ensureDownloaded` has to be called
+explicitly, and `allPacks` stays empty until something asks.
+
+### Superseded
+
+An earlier version of this document concluded that Background Assets does not
+run on the Simulator at all. That was wrong, and the cause was the extension
+point identifier above rather than anything about the Simulator. What is true is
+narrower: the Simulator ignores the development URL override, so packs cannot be
+downloaded there, though everything else works.
 
 ### Deployment target
 

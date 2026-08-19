@@ -114,10 +114,25 @@ Future<SetupResult> setUpIos({
     created.add(_write(appEntitlements, _entitlements(target.appGroup)));
   }
 
+  // Three keys, all on the app target. Managed Background Assets refuses to
+  // start without them, and it refuses by trapping rather than returning an
+  // error, so a project missing one crashes on first use.
   final appInfoPlist = p.join(iosDirectory, appTargetName, 'Info.plist');
-  if (await _setPlistString(appInfoPlist, 'BAAppGroupID', target.appGroup)) {
-    modified.add(appInfoPlist);
-  }
+  var plistChanged = await _setPlistString(
+    appInfoPlist,
+    'BAAppGroupID',
+    target.appGroup,
+  );
+  plistChanged =
+      await _setPlistBool(appInfoPlist, 'BAHasManagedAssetPacks', true) ||
+      plistChanged;
+  // Apple hosting by default: it also turns off the info-dictionary checks
+  // that a self-hosted app must otherwise satisfy in full, and self-hosting
+  // needs a manifest URL this tool cannot invent.
+  plistChanged =
+      await _setPlistBool(appInfoPlist, 'BAUsesAppleHosting', true) ||
+      plistChanged;
+  if (plistChanged) modified.add(appInfoPlist);
 
   // --- Point the app target at its entitlements ------------------------------
   final appTargetId = project.targetNamed(appTargetName)!;
@@ -185,6 +200,16 @@ Future<bool> _setPlistString(String path, String key, String value) async {
   return false;
 }
 
+Future<bool> _setPlistBool(String path, String key, bool value) async {
+  if (!File(path).existsSync()) return false;
+  final add = await Process.run('/usr/libexec/PlistBuddy', [
+    '-c',
+    'Add :$key bool ${value ? 'true' : 'false'}',
+    path,
+  ]);
+  return add.exitCode == 0;
+}
+
 Future<bool> _addAppGroup(String path, String group) async {
   const key = 'com.apple.security.application-groups';
   final existing = await Process.run('/usr/libexec/PlistBuddy', [
@@ -250,7 +275,7 @@ String _extensionInfoPlist(String appGroup) => '''
 \t<key>EXAppExtensionAttributes</key>
 \t<dict>
 \t\t<key>EXExtensionPointIdentifier</key>
-\t\t<string>com.apple.background-assets.content-request</string>
+\t\t<string>com.apple.background-asset-downloader-extension</string>
 \t</dict>
 \t<key>BAAppGroupID</key>
 \t<string>$appGroup</string>

@@ -16,6 +16,13 @@ class FreightExampleApp extends StatelessWidget {
   }
 }
 
+/// Packs declared in freight.yaml.
+///
+/// The list cannot come from [Freight.allPacks] alone: under a development
+/// URL override the system does not pre-populate packs, so nothing is known
+/// until something asks for it. A real app knows its own pack ids anyway.
+const declaredPacks = ['tutorial', 'maps_europe'];
+
 class PackListPage extends StatefulWidget {
   const PackListPage({super.key});
 
@@ -59,25 +66,31 @@ class _PackListPageState extends State<PackListPage> {
           if (snapshot.connectionState != ConnectionState.done) {
             return const Center(child: CircularProgressIndicator());
           }
-          if (snapshot.hasError) {
-            return _Message(
-              title: 'Could not list packs',
-              detail: '${snapshot.error}',
-            );
-          }
-          final packs = snapshot.data ?? const [];
-          if (packs.isEmpty) {
-            return const _Message(
-              title: 'No asset packs',
-              detail:
-                  'Build a pack with ba-package and serve its download '
-                  'manifest, then pull to reload.',
-            );
-          }
-          return ListView.separated(
-            itemCount: packs.length,
-            separatorBuilder: (_, _) => const Divider(height: 1),
-            itemBuilder: (context, i) => _PackTile(pack: packs[i]),
+
+          final known = {for (final pack in snapshot.data ?? const []) pack.id};
+          final ids = [
+            ...declaredPacks,
+            ...known.where((id) => !declaredPacks.contains(id)),
+          ];
+
+          return Column(
+            children: [
+              if (snapshot.hasError)
+                Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Text(
+                    'allPacks failed: ${snapshot.error}',
+                    style: const TextStyle(color: Colors.red, fontSize: 12),
+                  ),
+                ),
+              Expanded(
+                child: ListView.separated(
+                  itemCount: ids.length,
+                  separatorBuilder: (_, _) => const Divider(height: 1),
+                  itemBuilder: (context, i) => _PackTile(packId: ids[i]),
+                ),
+              ),
+            ],
           );
         },
       ),
@@ -85,22 +98,29 @@ class _PackListPageState extends State<PackListPage> {
   }
 }
 
-class _PackTile extends StatelessWidget {
-  const _PackTile({required this.pack});
+class _PackTile extends StatefulWidget {
+  const _PackTile({required this.packId});
 
-  final PackInfo pack;
+  final String packId;
+
+  @override
+  State<_PackTile> createState() => _PackTileState();
+}
+
+class _PackTileState extends State<_PackTile> {
+  String? _lastAction;
 
   @override
   Widget build(BuildContext context) {
-    final handle = Freight.pack(pack.id);
+    final handle = Freight.pack(widget.packId);
 
     return StreamBuilder<PackStatus>(
       stream: handle.watch(),
       builder: (context, snapshot) {
         final status = snapshot.data;
         return ListTile(
-          title: Text(pack.id),
-          subtitle: Text(_describe(status, pack)),
+          title: Text(widget.packId),
+          subtitle: Text(_lastAction ?? _describe(status)),
           trailing: switch (status) {
             PackDownloading(:final fraction) => SizedBox(
               width: 28,
@@ -110,12 +130,12 @@ class _PackTile extends StatelessWidget {
             PackReady() => IconButton(
               icon: const Icon(Icons.delete_outline),
               tooltip: 'Remove',
-              onPressed: handle.remove,
+              onPressed: () => _run('remove', handle.remove),
             ),
             _ => IconButton(
               icon: const Icon(Icons.download_outlined),
               tooltip: 'Download',
-              onPressed: handle.ensureDownloaded,
+              onPressed: () => _run('download', handle.ensureDownloaded),
             ),
           },
         );
@@ -123,59 +143,22 @@ class _PackTile extends StatelessWidget {
     );
   }
 
-  String _describe(PackStatus? status, PackInfo info) {
-    final size = _formatBytes(info.downloadSize);
-    return switch (status) {
-      PackDownloading(:final completedBytes, :final totalBytes) =>
-        '${_formatBytes(completedBytes)} of ${_formatBytes(totalBytes)}',
-      PackPaused() => 'Paused · $size',
-      PackReady(:final version, :final hasUpdate) =>
-        hasUpdate
-            ? 'v$version · update available'
-            : 'Ready · v$version · $size',
-      PackFailed(:final error) => 'Failed · ${error.message}',
-      _ => info.flags.downloaded ? 'Ready · $size' : 'Not downloaded · $size',
-    };
-  }
-
-  String _formatBytes(int bytes) {
-    if (bytes < 1024) return '$bytes B';
-    const units = ['KB', 'MB', 'GB'];
-    var value = bytes / 1024;
-    var unit = 0;
-    while (value >= 1024 && unit < units.length - 1) {
-      value /= 1024;
-      unit++;
+  Future<void> _run(String what, Future<void> Function() action) async {
+    setState(() => _lastAction = '$what…');
+    try {
+      await action();
+      if (mounted) setState(() => _lastAction = '$what ok');
+    } catch (e) {
+      if (mounted) setState(() => _lastAction = '$what failed: $e');
     }
-    return '${value.toStringAsFixed(1)} ${units[unit]}';
   }
-}
 
-class _Message extends StatelessWidget {
-  const _Message({required this.title, required this.detail});
-
-  final String title;
-  final String detail;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(title, style: theme.textTheme.titleMedium),
-            const SizedBox(height: 8),
-            Text(
-              detail,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodySmall,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  String _describe(PackStatus? status) => switch (status) {
+    PackDownloading(:final completedBytes, :final totalBytes) =>
+      '$completedBytes of $totalBytes bytes',
+    PackPaused() => 'Paused',
+    PackReady(:final version) => 'Ready, v$version',
+    PackFailed(:final error) => 'Failed: ${error.message}',
+    _ => 'Tap to download',
+  };
 }
