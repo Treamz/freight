@@ -10,6 +10,10 @@ jobs:
   publish:
     name: Publish to pub.dev
     runs-on: ubuntu-latest
+    # Without a limit, a publish waiting for authorisation that will never come
+    # holds a runner for six hours. pub prompts interactively when it cannot
+    # authenticate, and there is no terminal to answer it.
+    timeout-minutes: 15
     permissions:
       # pub.dev authenticates the workflow by its OIDC token, so no secret is
       # stored anywhere. It has to be enabled per package on pub.dev first,
@@ -73,8 +77,16 @@ jobs:
         if: steps.package.outputs.already == 'false'
         working-directory: ${{ steps.package.outputs.directory }}
         run: |
+          set -euo pipefail
           flutter pub get
-          flutter pub publish --force
+          # Nothing here can answer a prompt, so refuse rather than wait for
+          # one. Automated publishing has to be enabled for this package on
+          # pub.dev, under Admin, with the tag pattern <package>-v{{version}}.
+          if [ -z "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ]; then
+            echo "No OIDC token is available; the job needs id-token: write."
+            exit 1
+          fi
+          flutter pub publish --force < /dev/null
 
       - name: Report
         run: |
