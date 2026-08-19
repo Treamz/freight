@@ -34,6 +34,10 @@ typedef PackFileReader =
 /// configured — no app group, no downloader extension — that error propagates
 /// instead, because silently serving bundled assets would make a broken setup
 /// look like a working one.
+///
+/// One Android caveat: Play merges an install-time pack into the app, where it
+/// loses its identity, so a bundle scoped with [pack] cannot read one. An
+/// unscoped bundle finds those assets through the fallback.
 final class FreightBundle extends CachingAssetBundle {
   /// A bundle that reads from downloaded packs and falls back to [fallback],
   /// or to [rootBundle] when none is given.

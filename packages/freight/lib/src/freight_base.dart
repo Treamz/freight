@@ -42,6 +42,10 @@ abstract final class Freight {
   ///
   /// Pass [inPack] to scope the lookup when the same path exists in more than
   /// one pack. Throws [PathNotFoundException] when nothing matches.
+  ///
+  /// On Android, an install-time pack is merged into the app and loses its
+  /// identity, so it can only be read unscoped — passing [inPack] for one finds
+  /// nothing.
   static Future<Uint8List> read(String path, {String? inPack}) =>
       FreightPlatform.instance.read(path, inPack: inPack);
 
@@ -49,6 +53,11 @@ abstract final class Freight {
   ///
   /// Prefer [read]; reach for this only when something outside Dart needs a
   /// real path, such as a video player or a native database.
+  ///
+  /// On Android an install-time pack has no path to give: Play merges those
+  /// assets into the app itself, where they are reachable through the asset
+  /// manager and not the filesystem. [read] handles them; this throws
+  /// [PathNotFoundException].
   static Future<String> resolve(String path, {String? inPack}) =>
       FreightPlatform.instance.resolve(path, inPack: inPack);
 

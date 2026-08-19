@@ -1,6 +1,6 @@
 # freight_cli
 
-Build-time tooling for [`freight`](../freight): resolves asset pack globs,
+Build-time tooling for [`freight`](https://pub.dev/packages/freight): resolves asset pack globs,
 generates the manifests and packages them with Apple's `ba-package`.
 
 It is a separate package so an app depending on `freight` does not carry a YAML
@@ -50,7 +50,7 @@ It is deliberately narrow: it handles the layout `flutter create` produces and
 **refuses anything else** rather than guessing, because a wrong edit to
 `project.pbxproj` costs far more to recover from than adding the target by hand.
 Xcode's own **Background Download Extension** template is always the fallback —
-see [the setup guide](../freight/doc/ios-setup.md).
+see [the setup guide](https://github.com/Treamz/freight/blob/main/packages/freight/doc/ios-setup.md).
 
 ### `freight build`
 
@@ -124,14 +124,33 @@ packs:
   maps_europe:
     delivery: onDemand
     root: assets/maps/europe
-    files: ["**/*.tiles"]
-    exclude: ["**/draft_*.tiles"]
+    files: ["**.tiles"]
+    exclude: ["**draft_*.tiles"]
 ```
 
 `root` is the field that matters most. `ba-package` records each file's path
 relative to the directory it runs in, so without a declared root the repository
 layout would leak into the paths the app reads back. A file at
 `<root>/nested/deep.txt` is read as `nested/deep.txt`.
+
+### Globs
+
+Patterns are matched by [`package:glob`], relative to `root`, and one detail
+catches people out:
+
+| Pattern | Matches |
+|---|---|
+| `**` | everything under `root` |
+| `**.tiles` | `berlin.tiles` **and** `sub/prague.tiles` |
+| `**/*.tiles` | only `sub/prague.tiles` — `**/` requires a directory |
+| `*.tiles` | only `berlin.tiles` |
+
+`**/*.tiles` is the pattern most people reach for, and it silently drops files
+sitting directly in `root`. Use `**.tiles` unless you mean to exclude them.
+
+`exclude` is applied after `files` has matched, using the same syntax.
+
+[`package:glob`]: https://pub.dev/packages/glob
 
 ## Requirements
 

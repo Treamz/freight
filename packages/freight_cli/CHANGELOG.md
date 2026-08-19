@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+* Corrected the glob patterns in the documentation and the example. `**/*.tiles`
+  matches only files inside a subdirectory, so a pack written that way silently
+  dropped everything sitting directly in its root — use `**.tiles`. The
+  distinction is now documented with the other glob rules and pinned by a test.
+* Added an example, and `freight doctor` no longer asks for `ba-package` in a
+  project with no `ios/` directory.
+
 * `freight doctor` now checks the Android side too: that the asset pack plugin
   is declared, that each module exists, is included in `settings.gradle.kts` and
   listed on the app, and that its delivery type still matches `freight.yaml` —

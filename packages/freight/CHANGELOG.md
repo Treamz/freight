@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+* Documented that an install-time pack on Android cannot be resolved to a file
+  path or read through a scoped bundle: Play merges those assets into the app
+  itself, where they lose their pack identity. `Freight.read` still finds them
+  unscoped.
+
 * Added the Android runtime, backed by Play Asset Delivery, behind the same API
   as iOS: `ensureDownloaded`, the status stream, `read` and `resolve` all work
   against downloaded asset packs, and install-time packs fall back to the

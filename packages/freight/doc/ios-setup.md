@@ -113,8 +113,8 @@ packs:
   maps_europe:
     delivery: onDemand
     root: assets/maps/europe
-    files: ["**/*.tiles", "index.txt"]
-    exclude: ["**/draft_*.tiles"]
+    files: ["**.tiles", "index.txt"]
+    exclude: ["**draft_*.tiles"]
 ```
 
 `root` is the field that matters most. A file at `<root>/nested/deep.txt` is

@@ -4,7 +4,7 @@ Ship large assets outside your app bundle — iOS Managed Background Assets and
 Google Play Asset Delivery behind one Dart API.
 
 > **Status: early development.** The API is not stable and the package is not yet
-> published. See [PLAN.md](PLAN.md) for the design and release plan.
+> published. See [PLAN.md](https://github.com/Treamz/freight/blob/main/PLAN.md) for the design and release plan.
 
 > **iOS 26+ only.** `freight` targets Managed Background Assets, introduced in
 > iOS 26. Apps supporting iOS 25 and earlier need the legacy
@@ -33,13 +33,18 @@ Declare packs once:
 packs:
   tutorial:
     delivery: essential      # downloaded during install
-    files: [assets/tutorial/**]
+    root: assets/tutorial    # logical paths are relative to this
+    files: ["**"]
   maps_europe:
     delivery: onDemand       # downloaded when you ask
-    files: [assets/maps/europe/**]
+    root: assets/maps/europe
+    files: ["**"]
 ```
 
-Build them with [`freight_cli`](../freight_cli), a separate dev dependency so
+`root` decides what the app reads back: a file at `<root>/berlin.tiles` is read
+as `berlin.tiles`, wherever the sources sit in your repository.
+
+Build them with [`freight_cli`](https://pub.dev/packages/freight_cli), a separate dev dependency so
 this package carries no build-time tooling of its own:
 
 ```yaml
@@ -55,17 +60,17 @@ That resolves each pack's globs, generates the manifests and packages them with
 Apple's `ba-package`. Add `--base-url https://cdn.example.com/packs` to also
 write the download manifest a self-hosting server needs.
 
-Set up the iOS project once, and check it:
+Set the platform projects up once, and check them:
 
 ```bash
 dart run freight_cli:freight setup
 dart run freight_cli:freight doctor
 ```
 
-Managed Background Assets reports most misconfiguration by crashing on a device
-rather than returning an error, so `doctor` looks for those problems on your
-machine instead — a missing app group, an app group only one target holds, no
-downloader extension, a pack whose globs match nothing.
+`setup` adds the Background Assets downloader extension on iOS and a Gradle
+asset pack module per pack on Android. `doctor` then looks for the mistakes both
+stores otherwise report late — iOS by crashing on a device, Android by failing a
+bundle build.
 
 Then, at runtime:
 
@@ -127,19 +132,36 @@ is missing. `freight` checks both first and throws `MissingAppGroupException` or
 2. **Add the App Groups capability to the app target** with the same group, and
    set `BAAppGroupID` in the app's `Info.plist`.
 
-**[doc/ios-setup.md](doc/ios-setup.md) walks through all of it**, including
+**[The setup guide](https://github.com/Treamz/freight/blob/main/packages/freight/doc/ios-setup.md) walks through all of it**, including
 building packs with `ba-package`, self-hosting, and what each failure message
 actually means.
 
 Note that Background Assets does not work on the iOS Simulator — it needs a real
 signing identity. Test asset packs on a device.
 
+## Android setup
+
+`freight setup` generates a Gradle asset pack module per pack, declares the
+`com.android.asset-pack` plugin, includes each module in `settings.gradle.kts`
+and lists them on the app. `freight build` then stages each pack's files into
+its module, which is the only place Play reads them from.
+
+Asset packs only exist in an app bundle, so `flutter build appbundle` is what
+carries them — an APK has none.
+
+Two differences from iOS are worth knowing rather than discovering:
+
+* `Freight.allPacks` lists only packs already on the device. Play has no API for
+  the ones an app merely declares.
+* `requireLatest` does nothing. Play versions asset packs with the app, so there
+  is never a newer one for the installed build.
+
 ## Requirements
 
 * Flutter 3.29+, Dart 3.7+
 * iOS 26.0+ (26.4+ recommended; the 26.0 APIs are already deprecated by Apple)
-* Xcode 26 or the Managed Background Assets developer tools for Linux, for
-  building packs
+* For building iOS packs: Xcode 26, or the Managed Background Assets developer
+  tools for Linux. The Android half needs neither.
 
 ## License
 
