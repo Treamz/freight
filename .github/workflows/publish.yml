@@ -46,15 +46,41 @@ jobs:
             exit 1
           fi
 
+          # A version already on pub.dev is not a failure. It happens whenever a
+          # release was published by hand and tagged afterwards — which every
+          # package's first release is — and whenever a tag is moved or pushed
+          # twice. Failing here would leave a red run that says "broken" when
+          # nothing is.
+          published=$(curl -sf "https://pub.dev/api/packages/$package" \
+            | python3 -c 'import json,sys; print(json.load(sys.stdin)["latest"]["version"])' \
+            2>/dev/null || echo "")
+          if [ "$published" = "$version" ]; then
+            echo "already=true" >> "$GITHUB_OUTPUT"
+            echo "$package $version is already on pub.dev; nothing to do."
+          else
+            echo "already=false" >> "$GITHUB_OUTPUT"
+          fi
+
           echo "directory=$directory" >> "$GITHUB_OUTPUT"
           echo "package=$package" >> "$GITHUB_OUTPUT"
 
       - uses: subosito/flutter-action@v2
+        if: steps.package.outputs.already == 'false'
         with:
           channel: stable
 
       - name: Publish
+        if: steps.package.outputs.already == 'false'
         working-directory: ${{ steps.package.outputs.directory }}
         run: |
           flutter pub get
           flutter pub publish --force
+
+      - name: Report
+        run: |
+          set -euo pipefail
+          if [ "${{ steps.package.outputs.already }}" = "true" ]; then
+            echo "### ${GITHUB_REF_NAME} was already published" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "### Published ${GITHUB_REF_NAME}" >> "$GITHUB_STEP_SUMMARY"
+          fi

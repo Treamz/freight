@@ -34,7 +34,13 @@ package goes out by hand, and everything after it is automated.
 
    For a package's first version, publish by hand instead:
    `cd packages/<package> && flutter pub publish`. Then enable automated
-   publishing on pub.dev so the workflow can take over.
+   publishing on pub.dev so the workflow can take over — the tag pattern there
+   must be `<package>-v{{version}}`, since both packages are tagged from one
+   repository.
+
+   Tagging a version that is already on pub.dev is safe: the workflow notices
+   and does nothing, rather than failing and leaving a red run that reads as a
+   broken release. That covers every first release, and any tag pushed twice.
 
 Abandoning a prepared release costs nothing: delete the branch. `main` still
 says `## Unreleased`, because the rename only ever happened on the branch.
