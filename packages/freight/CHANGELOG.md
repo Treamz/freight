@@ -9,8 +9,11 @@
   discovering: `allPacks` lists only packs already on the device, because Play
   has no API for the ones an app merely declares, and `requireLatest` does
   nothing, because Play versions asset packs with the app. Generating the Gradle
-  asset pack modules is still to come, so packs cannot be shipped to Android
-  from this package yet.
+  asset pack modules is handled by `freight_cli`.
+* Added a consumer ProGuard rule, so apps do not have to discover it themselves:
+  the Play Asset Delivery Kotlin extensions reference a Play Services annotation
+  that is not on the classpath, and R8 fails a release build over the missing
+  class.
 
 * Moved the `freight build` and `freight doctor` commands into a separate
   `freight_cli` package, so an app depending on `freight` no longer carries

@@ -2,8 +2,20 @@ import 'dart:io';
 
 import 'package:path/path.dart' as p;
 
+import 'android/asset_packs.dart';
+import 'pack_config.dart';
 import 'xcode/extension_target.dart';
 import 'xcode/pbxproj.dart';
+
+/// Generates the Gradle asset pack modules for the packs in [config].
+///
+/// Separate from the iOS half because the two need different things: iOS needs
+/// nothing but the project, while Android needs to know which packs exist and
+/// how each is delivered.
+AssetPackModules setUpAndroid({
+  required String projectRoot,
+  required FreightConfig config,
+}) => generateAssetPackModules(projectRoot: projectRoot, config: config);
 
 /// What `freight setup` did.
 final class SetupResult {

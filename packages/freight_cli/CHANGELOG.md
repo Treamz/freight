@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+* `freight setup` now generates the Gradle asset pack modules for Android as
+  well, and `freight build` gained `--platform`, staging each pack's files into
+  its module under the same logical paths the iOS archive records. Pack ids are
+  validated against Play's rule for module names — letters, numbers and
+  underscores, starting with a letter — because one id has to be valid on both
+  platforms.
+
 * Added the `freight setup` command, which adds the Background Assets downloader
   extension target to a Flutter iOS project: the extension's source, its
   `Info.plist` and entitlements, the app group on both targets, `BAAppGroupID`,

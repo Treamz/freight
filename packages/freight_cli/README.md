@@ -36,10 +36,15 @@ click through Xcode's template and match up the app group by hand.
 dart run freight_cli:freight setup
 ```
 
-It writes the extension's source, `Info.plist` and entitlements, gives the app
-the same app group, sets `BAAppGroupID`, and edits `project.pbxproj` to add the
-target and embed it in the right build phase. Running it twice does nothing the
-second time.
+On **iOS** it writes the extension's source, `Info.plist` and entitlements, gives
+the app the same app group, sets `BAAppGroupID`, and edits `project.pbxproj` to
+add the target and embed it in the right build phase.
+
+On **Android** it generates a Gradle asset pack module per pack, declares the
+`com.android.asset-pack` plugin at whatever version the project already uses for
+AGP, includes each module in `settings.gradle.kts` and lists them on the app.
+
+Running it twice does nothing the second time.
 
 It is deliberately narrow: it handles the layout `flutter create` produces and
 **refuses anything else** rather than guessing, because a wrong edit to
@@ -55,7 +60,14 @@ packages them.
 ```bash
 dart run freight_cli:freight build
 dart run freight_cli:freight build --base-url https://cdn.example.com/packs
+dart run freight_cli:freight build --platform android
 ```
+
+By default it builds for whichever platforms the project has. On **iOS** that
+means packaging each pack into an `.aar` with `ba-package`; on **Android** it
+stages each pack's files into its module's `src/main/assets`, which is the only
+place Play reads them from, under the same logical paths the iOS archive
+records.
 
 `--base-url` also writes the download manifest a self-hosting server must
 serve. Each pack's URL is that base plus the pack id **with no file extension**.
@@ -104,7 +116,8 @@ layout would leak into the paths the app reads back. A file at
 
 ## Requirements
 
-Xcode 26 or newer, which is where `ba-package` ships. macOS only.
+For iOS packs: Xcode 26 or newer, which is where `ba-package` ships, so macOS
+only. The Android half needs neither.
 
 ## License
 
