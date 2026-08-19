@@ -12,8 +12,8 @@ Google Play Asset Delivery behind one Dart API.
 > implement.
 >
 > **iOS is proven end to end**, on an iPhone: a pack declared in `freight.yaml`,
-> packaged with `ba-package`, downloaded by the device and read back through
-> `Freight.read`.
+> packaged with `ba-package`, downloaded by the device, read back through
+> `Freight.read`, and drawn from the pack with `FreightImage`.
 >
 > **Android is not.** The runtime reads and downloads Play Asset Delivery packs
 > through the same API, and `freight_cli` generates the Gradle asset pack

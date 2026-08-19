@@ -122,6 +122,24 @@ class _PackTileState extends State<_PackTile> {
           // Reading a file is the only proof that the pack's contents actually
           // arrived; a status of "ready" is the system's word for it.
           onTap: () => _read(),
+          // The pack ships a PNG; drawing it through FreightImage is the only
+          // thing that exercises the decode path, which reading bytes does not.
+          leading: widget.packId == 'tutorial' && status is PackReady
+              ? SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: Image(
+                    image: const FreightImage('badge.png', pack: 'tutorial'),
+                    errorBuilder: (context, error, stack) => Tooltip(
+                      message: '$error',
+                      child: const Icon(
+                        Icons.broken_image_outlined,
+                        color: Colors.red,
+                      ),
+                    ),
+                  ),
+                )
+              : null,
           title: Text(widget.packId),
           subtitle: Text(_lastAction ?? _describe(status)),
           trailing: switch (status) {

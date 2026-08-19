@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+* Verified `FreightImage` on hardware: a PNG shipped in an asset pack decodes and
+  renders from the pack on an iPhone. The example draws it, which is what
+  exercises the decode path — reading bytes does not.
+
 * `AssetPack.watch` now emits the pack's current state before any change. It
   previously forwarded only the platform's change notifications, so a pack that
   was simply sitting there downloaded looked unknown to a `StreamBuilder` until
