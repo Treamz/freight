@@ -59,6 +59,39 @@ packs:
     appGroupEntitlement('ios/Downloader/Downloader.entitlements', group);
   }
 
+  void wellFormedAndroidProject({
+    String delivery = 'on-demand',
+    bool includeModule = true,
+    bool listOnApp = true,
+    bool declarePlugin = true,
+  }) {
+    final plugin =
+        declarePlugin
+            ? '    id("com.android.asset-pack") version "9.0.1" apply false'
+            : '';
+    final include = includeModule ? 'include(":tutorial")' : '';
+    final listed = listOnApp ? '    assetPacks += listOf(":tutorial")' : '';
+
+    write(
+      'android/settings.gradle.kts',
+      'plugins {\n'
+          '    id("com.android.application") version "9.0.1" apply false\n'
+          '$plugin\n'
+          '}\n\n'
+          'include(":app")\n'
+          '$include\n',
+    );
+    write('android/app/build.gradle.kts', 'android {\n$listed\n}\n');
+    write(
+      'android/tutorial/build.gradle.kts',
+      'plugins { id("com.android.asset-pack") }\n'
+          'assetPack {\n'
+          '    packName.set("tutorial")\n'
+          '    dynamicDelivery { deliveryType.set("$delivery") }\n'
+          '}\n',
+    );
+  }
+
   Future<List<Check>> doctor({int toolExitCode = 0}) => runDoctor(
     projectRoot: project.path,
     tool: BaPackage(
@@ -256,14 +289,108 @@ packs:
     test(
       'warns rather than fails when run outside a Flutter project',
       () async {
+        // Neither platform directory is present, so there is nothing to check
+        // and nothing that is actually wrong with the configuration.
         config();
         write('assets/tutorial/welcome.txt');
 
         expect(
-          find(await doctor(), 'iOS project'),
+          find(await doctor(), 'Platform projects'),
           hasStatus(CheckStatus.warn),
         );
       },
     );
+  });
+
+  group('Android', () {
+    void androidOnlyProject() {
+      config(
+        'packs:\n'
+        '  tutorial:\n'
+        '    delivery: onDemand\n'
+        '    root: assets/tutorial\n',
+      );
+      write('assets/tutorial/welcome.txt');
+    }
+
+    test('passes a project setup has wired up', () async {
+      androidOnlyProject();
+      wellFormedAndroidProject();
+
+      final checks = await doctor();
+      expect(
+        checks.where((c) => c.status != CheckStatus.pass),
+        isEmpty,
+        reason: checks
+            .where((c) => c.status != CheckStatus.pass)
+            .map((c) => '${c.title}: ${c.detail}')
+            .join('; '),
+      );
+    });
+
+    test('does not ask an Android-only project for ba-package', () async {
+      // It ships with Xcode and builds iOS packs; demanding it here would make
+      // doctor unusable on Linux and wrong on macOS.
+      androidOnlyProject();
+      wellFormedAndroidProject();
+
+      expect(
+        (await doctor(toolExitCode: 72)).where((c) => c.title == 'ba-package'),
+        isEmpty,
+      );
+    });
+
+    test('reports a module that was never generated', () async {
+      androidOnlyProject();
+      wellFormedAndroidProject();
+      File(
+        p.join(project.path, 'android/tutorial/build.gradle.kts'),
+      ).deleteSync();
+
+      expect(
+        find(await doctor(), 'module "tutorial"'),
+        hasStatus(CheckStatus.fail),
+      );
+    });
+
+    test('reports a module missing from settings.gradle.kts', () async {
+      androidOnlyProject();
+      wellFormedAndroidProject(includeModule: false);
+
+      final check = find(await doctor(), 'module "tutorial"');
+      expect(check, hasStatus(CheckStatus.fail));
+      expect(check.detail, contains('settings.gradle.kts'));
+    });
+
+    test('reports a module the app does not list', () async {
+      androidOnlyProject();
+      wellFormedAndroidProject(listOnApp: false);
+
+      final check = find(await doctor(), 'module "tutorial"');
+      expect(check, hasStatus(CheckStatus.fail));
+      expect(check.detail, contains('assetPacks'));
+    });
+
+    test('reports the missing asset pack plugin', () async {
+      androidOnlyProject();
+      wellFormedAndroidProject(declarePlugin: false);
+
+      expect(
+        find(await doctor(), 'Asset pack plugin'),
+        hasStatus(CheckStatus.fail),
+      );
+    });
+
+    test('catches delivery drifting from freight.yaml', () async {
+      // Changing delivery in the configuration does nothing until setup runs
+      // again, and the bundle builds either way with the stale policy.
+      androidOnlyProject();
+      wellFormedAndroidProject(delivery: 'install-time');
+
+      final check = find(await doctor(), 'module "tutorial"');
+      expect(check, hasStatus(CheckStatus.fail));
+      expect(check.detail, contains('install-time'));
+      expect(check.detail, contains('on-demand'));
+    });
   });
 }

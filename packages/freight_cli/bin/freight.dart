@@ -6,6 +6,7 @@ import 'package:freight_cli/src/builder.dart';
 import 'package:freight_cli/src/doctor.dart';
 import 'package:freight_cli/src/pack_config.dart';
 import 'package:freight_cli/src/android/asset_packs.dart';
+import 'package:freight_cli/src/android/limits.dart';
 import 'package:freight_cli/src/pack_planner.dart';
 import 'package:freight_cli/src/setup.dart';
 import 'package:freight_cli/src/xcode/extension_target.dart';
@@ -255,6 +256,16 @@ Future<void> _build(ArgResults args) async {
       'directory. Pass --platform to force one.',
     );
     exit(66);
+  }
+
+  // Reported before building rather than after: a pack over the limit still
+  // packages perfectly, and the store rejects it much later.
+  for (final warning in checkPlayLimits([
+    for (final pack in config.packs) planPack(pack, projectRoot: projectRoot),
+  ])) {
+    stderr
+      ..writeln('warning: ${warning.title}: ${warning.detail}')
+      ..writeln('         ${warning.fix}');
   }
 
   if (wantsIos) {

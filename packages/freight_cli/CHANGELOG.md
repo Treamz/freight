@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+* `freight doctor` now checks the Android side too: that the asset pack plugin
+  is declared, that each module exists, is included in `settings.gradle.kts` and
+  listed on the app, and that its delivery type still matches `freight.yaml` —
+  changing `delivery` does nothing until `freight setup` runs again, and the
+  bundle builds happily with the stale policy. It also stops asking for
+  `ba-package` in a project with no `ios/` directory, which made it unusable on
+  Linux.
+* `doctor` and `build` warn about packs over Play's limits: 512 MB for a
+  fast-follow or on-demand pack, and 1 GB across all install-time packs.
+
 * `freight setup` now generates the Gradle asset pack modules for Android as
   well, and `freight build` gained `--platform`, staging each pack's files into
   its module under the same logical paths the iOS archive records. Pack ids are

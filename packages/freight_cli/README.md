@@ -78,9 +78,9 @@ expected.
 
 ### `freight doctor`
 
-Managed Background Assets reports most misconfiguration by crashing on a device
-rather than returning an error, so `doctor` looks for those problems on the
-machine that can still fix them cheaply.
+Both stores report misconfiguration late — iOS by crashing on a device, Android
+by failing a bundle build, often only in release — so `doctor` looks for those
+problems on the machine that can still fix them cheaply.
 
 ```
 [ok] ba-package: 1.2
@@ -89,9 +89,28 @@ machine that can still fix them cheaply.
 [ok] BAAppGroupID: group.com.example.app
 [ok] App Groups capability: 2 targets grant "group.com.example.app"
 [ok] Downloader extension: FreightDownloader
+[ok] Asset pack plugin
+[ok] module "tutorial": fast-follow
+[ok] module "maps_europe": on-demand
 ```
 
+It checks whichever platforms the project has, and asks for `ba-package` only
+when there is an `ios/` directory. Beyond the wiring it catches drift: changing
+a pack's `delivery` in `freight.yaml` does nothing until `freight setup` runs
+again, and the bundle builds happily with the stale policy.
+
 It exits non-zero if any check fails.
+
+### Size limits
+
+Both `doctor` and `build` warn when a pack is over what Play accepts — 512 MB
+for a fast-follow or on-demand pack, and 1 GB across all install-time packs
+together. Warnings, not errors: a project that never ships to Android is
+entitled to ignore them, and the store rejection they predict comes long after
+the build.
+
+Apple documents its own limits; they are not checked here, because warning about
+numbers that were never verified would be worse than staying quiet.
 
 ## `freight.yaml`
 
