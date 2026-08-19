@@ -211,6 +211,18 @@ pack arrives during installation; under a development override that trigger does
 not fire at all. Call `ensureDownloaded` yourself to fetch anything, and expect
 `Freight.allPacks` to be empty until you do.
 
+**Read a file to check it worked.** `ba-serve` logs failures and nothing else,
+so a silent server log means neither success nor failure, and a status of
+"ready" is only the system's word for it:
+
+```dart
+await Freight.pack('tutorial').ensureDownloaded();
+final bytes = await Freight.read('welcome.txt', inPack: 'tutorial');
+```
+
+Bytes coming back is the only honest confirmation — of the download, and of the
+logical path resolving the way `root` said it would.
+
 ## Reading packs from Dart
 
 Asset packs are a virtual filesystem, not a folder — there is no "pack

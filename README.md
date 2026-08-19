@@ -5,6 +5,10 @@ Google Play Asset Delivery behind one Dart API.
 
 > **Status: early development.** Neither package is published yet. See
 > [PLAN.md](PLAN.md) for the design and release plan.
+>
+> iOS works end to end on hardware — declared, packaged, downloaded and read
+> back. Android is built and produces correct app bundles, but has not run
+> against Play services.
 
 | Package | What it is |
 |---|---|
