@@ -1,6 +1,6 @@
 name: freight
 description: "Ship large assets outside your app bundle: iOS Managed Background Assets and Google Play Asset Delivery behind one Dart API."
-version: 0.1.0
+version: 0.1.1
 homepage: https://github.com/Treamz/freight
 repository: https://github.com/Treamz/freight
 issue_tracker: https://github.com/Treamz/freight/issues
