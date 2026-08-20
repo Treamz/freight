@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.1
 
 * Corrected the README, which still said the package was not published — pub.dev
   renders the README from the published archive, so the claim was visible on the
