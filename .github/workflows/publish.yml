@@ -73,19 +73,39 @@ jobs:
         with:
           channel: stable
 
+      - name: Authenticate to pub.dev
+        if: steps.package.outputs.already == 'false'
+        run: |
+          set -euo pipefail
+          # dart-lang/setup-dart does this for you; subosito/flutter-action does
+          # not, and pub then falls back to opening a browser and waiting for an
+          # authorisation nobody can give. So the exchange is done here, where
+          # it is visible.
+          if [ -z "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ]; then
+            echo "No OIDC token is available; the job needs id-token: write."
+            exit 1
+          fi
+
+          token=$(curl -sS \
+            -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=https://pub.dev" \
+            | python3 -c 'import json,sys; print(json.load(sys.stdin)["value"])')
+          if [ -z "$token" ]; then
+            echo "The OIDC exchange returned nothing."
+            exit 1
+          fi
+          echo "::add-mask::$token"
+          echo "PUB_TOKEN=$token" >> "$GITHUB_ENV"
+
       - name: Publish
         if: steps.package.outputs.already == 'false'
         working-directory: ${{ steps.package.outputs.directory }}
         run: |
           set -euo pipefail
+          dart pub token add https://pub.dev --env-var PUB_TOKEN
           flutter pub get
-          # Nothing here can answer a prompt, so refuse rather than wait for
-          # one. Automated publishing has to be enabled for this package on
-          # pub.dev, under Admin, with the tag pattern <package>-v{{version}}.
-          if [ -z "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ]; then
-            echo "No OIDC token is available; the job needs id-token: write."
-            exit 1
-          fi
+          # Still from /dev/null: if the credential is somehow not accepted,
+          # fail rather than sit through the timeout.
           flutter pub publish --force < /dev/null
 
       - name: Report
