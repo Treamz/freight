@@ -3,8 +3,9 @@
 Ship large assets outside your app bundle — iOS Managed Background Assets and
 Google Play Asset Delivery behind one Dart API.
 
-> **Status: early development.** Neither package is published yet. See
-> [PLAN.md](PLAN.md) for the design and release plan.
+> **Status: early development.** Both packages are published at 0.1.0, but the
+> API is not stable — expect it to move before 1.0. See [PLAN.md](PLAN.md) for
+> the design and release plan.
 >
 > iOS works end to end on hardware — declared, packaged, downloaded and read
 > back. Android is built and produces correct app bundles, but has not run
@@ -12,8 +13,8 @@ Google Play Asset Delivery behind one Dart API.
 
 | Package | What it is |
 |---|---|
-| [`freight`](packages/freight) | The Flutter plugin. Depends on nothing but Flutter. |
-| [`freight_cli`](packages/freight_cli) | Build-time tooling: packaging and setup checks. Pure Dart. |
+| [`freight`](https://pub.dev/packages/freight) | The Flutter plugin. Depends on nothing but Flutter. |
+| [`freight_cli`](https://pub.dev/packages/freight_cli) | Build-time tooling: packaging and setup checks. Pure Dart. |
 
 They are separate so an app carrying the plugin does not also carry a YAML
 parser, a glob matcher and an argument parser it never runs. `freight_cli` does
