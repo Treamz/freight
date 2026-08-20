@@ -3,8 +3,10 @@
 Ship large assets outside your app bundle — iOS Managed Background Assets and
 Google Play Asset Delivery behind one Dart API.
 
-> **Status: early development.** The API is not stable and the package is not yet
-> published. See [PLAN.md](https://github.com/Treamz/freight/blob/main/PLAN.md) for the design and release plan.
+> **Status: early development.** Published, but the API is not stable — expect
+> it to move before 1.0. See
+> [PLAN.md](https://github.com/Treamz/freight/blob/main/PLAN.md) for the design
+> and release plan.
 
 > **iOS 26+ only.** `freight` targets Managed Background Assets, introduced in
 > iOS 26. Apps supporting iOS 25 and earlier need the legacy
@@ -28,6 +30,19 @@ downloader-extension dance with declarative asset packs, and Android has had Pla
 Asset Delivery for years. As of iOS 26 the two work the same way — declare a pack,
 let the store host it, request it at runtime — which is what makes one API
 possible.
+
+## Install
+
+```yaml
+dependencies:
+  freight: ^0.1.0
+
+dev_dependencies:
+  freight_cli: ^0.1.0
+```
+
+`freight_cli` builds the packs and sets the project up; it is a dev dependency
+so that nothing an app ships carries a YAML parser it never runs.
 
 ## Usage
 

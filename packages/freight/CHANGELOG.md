@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+* Corrected the README, which still said the package was not published — pub.dev
+  renders the README from the published archive, so the claim was visible on the
+  package's own page. Added the install snippet that was missing along with it.
+
 ## 0.1.0
 
 * Verified `FreightImage` on hardware: a PNG shipped in an asset pack decodes and
